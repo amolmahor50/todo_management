@@ -34,7 +34,7 @@ const ProtectedRoute = ({ children }) => {
     if (savedUser) {
       setUser(savedUser);
     } else {
-      navigate("/signIn");
+      navigate("/");
     }
   }, [setUser, navigate]);
 
@@ -43,7 +43,7 @@ const ProtectedRoute = ({ children }) => {
 
 const router = createBrowserRouter([
   {
-    path: "signIn",
+    path: "/",
     element: <LoginHandler>
       <LoginForm />
     </LoginHandler>
@@ -67,7 +67,9 @@ const router = createBrowserRouter([
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <TodoContextProvider>
-      <RouterProvider router={router} />
+      <div className='bg-muted h-screen'>
+        <RouterProvider router={router} />
+      </div>
     </TodoContextProvider>
     <Toaster />
   </StrictMode>,

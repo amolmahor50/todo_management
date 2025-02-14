@@ -3,10 +3,15 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import { Checkbox } from "@/components/ui/checkbox"
 import { IoEyeOffOutline, IoEyeOutline } from "react-icons/io5"
-import { useState } from "react"
+import { useContext, useState } from "react"
+import { createUserWithEmailAndPassword, getAuth, updateProfile } from "firebase/auth"
+import { doc, setDoc } from "firebase/firestore"
+import { toast } from "sonner"
+import { TodoContextData } from "../context/TodoContext"
+import { firebaseStore } from "../../lib/firebaseConfig"
 
 const required = [
     { regex: /.{8,}/, message: "Password must be at least 8 characters long." },
@@ -17,9 +22,11 @@ const required = [
 ];
 
 export function CreateAccount({ className, ...props }) {
-
+    const { setUser } = useContext(TodoContextData);
+    const auth = getAuth();
     const [typePassword, setTypePassword] = useState("password");
     const [confirmTypePassword, setConfirmTypePassword] = useState("password");
+    const [loading, setLoading] = useState(false)
 
     // State for form inputs
     const [createAccountData, setCreateAccountData] = useState({
@@ -32,6 +39,7 @@ export function CreateAccount({ className, ...props }) {
     });
 
     const [error, setError] = useState("");
+    const Navigate = useNavigate();
 
     // Handle input change
     const handleInputChange = (e) => {
@@ -87,8 +95,41 @@ export function CreateAccount({ className, ...props }) {
             setError(validationError);
             return;
         }
-        console.log("CreateAccountData", createAccountData);
-    }
+        setLoading(true);
+        const { firstName, lastName, email, password } = createAccountData;
+
+        try {
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            const user = userCredential.user;
+
+            // Update Firebase Auth profile (Only for display purposes)
+            await updateProfile(user, {
+                displayName: `${firstName} ${lastName}`,
+            });
+
+            // Save firstName and lastName separately in Firestore
+            await setDoc(doc(firebaseStore, "users", user.uid), {
+                uid: user.uid,
+                firstName,
+                lastName,
+                email,
+            });
+
+            setUser({
+                uid: user.uid,
+                firstName,
+                lastName,
+                email: user.email,
+            });
+
+            Navigate("/");
+            setLoading(false);
+            toast.success("Account created successfully! Please log in.");
+        } catch (err) {
+            toast.error("Error: Email already in use or invalid details.");
+            setLoading(false);
+        }
+    };
 
     return (
         <div className="flex min-h-svh flex-col items-center justify-center bg-muted p-6 md:p-10">
@@ -200,11 +241,11 @@ export function CreateAccount({ className, ...props }) {
                                     </div>
                                     {error && <p className="text-red-400 text-sm font-medium">{error}</p>}
                                     <Button variant="orange" type="submit" className="w-full">
-                                        Login
+                                        {loading ? "Wait...." : "Create Account"}
                                     </Button>
                                     <div className="text-center text-sm">
                                         You Have already account?
-                                        <Link to='/signIn' className="underline underline-offset-4 ml-1 text-orange-600">
+                                        <Link to='/' className="underline underline-offset-4 ml-1 text-orange-600">
                                             Sign In
                                         </Link>
                                     </div>
