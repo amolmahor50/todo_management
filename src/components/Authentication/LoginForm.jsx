@@ -10,7 +10,7 @@ import { FaGoogle } from "react-icons/fa";
 import { FaGithub } from "react-icons/fa";
 import { TodoContextData } from "../context/TodoContext";
 import { toast } from "sonner";
-import { getUser, loginWithGoogle, loginWithEmail } from "./auth";
+import { getUser, loginWithGoogle, loginWithEmail, loginWithFacebook } from "./auth";
 
 export function LoginForm({ className, ...props }) {
   const { setUser } = useContext(TodoContextData);
@@ -55,6 +55,24 @@ export function LoginForm({ className, ...props }) {
         setUser(user);
         saveEmailToStorage(user.email);
         navigate("/todo-management");
+      } else {
+        toast.error("Failed to retrieve user after Google login.");
+      }
+    } catch (error) {
+      toast.error("Login with Google failed.");
+    }
+  };
+
+  // Handle Facebook Login
+  const handleFacebookLogin = async () => {
+    try {
+      await loginWithFacebook();
+      const user = getUser();
+      if (user) {
+        setUser(user);
+        saveEmailToStorage(user.email);
+        navigate("/todo-management");
+        console.log("FacebookLogin", user);
       } else {
         toast.error("Failed to retrieve user after Google login.");
       }
@@ -124,7 +142,7 @@ export function LoginForm({ className, ...props }) {
                       <FaGoogle color="orange" />
                       <span className="sr-only">Login with Google</span>
                     </Button>
-                    <Button variant="outline" className="w-full">
+                    <Button variant="outline" className="w-full" onClick={handleFacebookLogin}>
                       <FaFacebookF color="orange" />
                       <span className="sr-only">Login with Facebook</span>
                     </Button>

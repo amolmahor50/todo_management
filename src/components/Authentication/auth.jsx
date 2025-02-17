@@ -1,4 +1,4 @@
-import { auth, GoogleProvider, firebaseStore } from "../../lib/firebaseConfig";
+import { auth, GoogleProvider, firebaseStore, facebookProvider } from "../../lib/firebaseConfig";
 import { signInWithPopup, signInWithEmailAndPassword, sendPasswordResetEmail, signOut } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import { toast } from "sonner";
@@ -84,6 +84,34 @@ export const loginWithEmail = async (email, password) => {
                 label: "Close"
             }
         });
+    }
+};
+
+// Login with Facebook
+export const loginWithFacebook = async () => {
+    try {
+        const result = await signInWithPopup(auth, facebookProvider);
+        const user = result.user;
+
+        if (user?.uid) {
+            const userRef = doc(firebaseStore, "users", user.uid);
+            const userDoc = await getDoc(userRef);
+
+            const additionalInfo = userDoc.exists()
+                ? userDoc.data()
+                : {
+                    mobile: "",
+                    address: "",
+                    gender: "",
+                    dateOfBirth: "",
+                };
+
+            saveUserProfile(user, additionalInfo);
+            toast("Login Successfully!", { action: { label: "Close" } });
+        }
+    } catch (error) {
+        console.error("Google Login Error:", error.message);
+        toast("Please enter correct info.", { action: { label: "Close" } });
     }
 };
 

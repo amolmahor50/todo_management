@@ -9,10 +9,11 @@ import { Button } from "@/components/ui/button";
 
 export default function CreateFolder() {
     const [openCreateFolderPopUp, setOpenCreateFolderPopUp] = useState(false);
+    const [folderName, setFolderName] = useState("Unnamed folder");
 
     const Navigate = useNavigate();
     return (
-        <div className="flex flex-col max-w-5xl mx-auto sm:px-8 px-4 sm:py-6 py-3">
+        <div className="h-screen">
             <div className="flex justify-between items-center">
                 <IoIosArrowRoundBack className="sm:text-3xl text-2xl cursor-pointer" onClick={() => Navigate(-1)} />
                 <span>Folders</span>
@@ -43,9 +44,10 @@ export default function CreateFolder() {
                             id="text"
                             name="text"
                             type="text"
-                            value="Unnamed folder"
+                            value={folderName}
+                            onChange={(e) => setFolderName(e.target.value)}
                             placeholder="Unnamed folder"
-                            className="border-2 border-yellow-500"
+                            className="border-2 focus:border-yellow-500"
                         />
                         <div className="grid grid-cols-2 gap-6">
                             <Button variant="secondary" onClick={() => setOpenCreateFolderPopUp(false)}>Cancel</Button>
