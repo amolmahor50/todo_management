@@ -12,6 +12,7 @@ import { TodoContextData } from "./components/context/TodoContext";
 import Tasks from "./components/pages/Tasks";
 import Notes from "./components/pages/Notes";
 import EditTodo from "./components/pages/EditTodo";
+import Profile from "./components/pages/Profile";
 
 
 // LoginHandler Component
@@ -104,11 +105,17 @@ const router = createBrowserRouter([
       <EditTodo />
     </ProtectedRoute>
   },
+  {
+    path: 'setting/profile',
+    element: <ProtectedRoute>
+      <Profile />
+    </ProtectedRoute>
+  },
 ])
 
 function App() {
   return (
-    <div className="sm:max-w-5xl w-full sm:h-screen mx-auto">
+    <div className="sm:max-w-5xl w-full mx-auto sm:h-screen">
       <RouterProvider router={router} />
     </div>
   )

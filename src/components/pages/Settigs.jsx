@@ -1,5 +1,5 @@
 import { IoIosArrowRoundBack } from "react-icons/io";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Switch } from "@/components/ui/switch"
 import {
     DropdownMenu,
@@ -9,16 +9,36 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { ChevronsUpDown } from "lucide-react"
 import { MdNavigateNext } from "react-icons/md";
-
+import { useContext } from "react";
+import { TodoContextData } from "../context/TodoContext";
+import { logout } from '../Authentication/auth'
 
 export default function Settigs() {
-    const Navigate = useNavigate()
+    const { setUser } = useContext(TodoContextData);
+    const Navigate = useNavigate();
+
+    const handleLogout = async () => {
+        await logout();
+        setUser(null);
+        Navigate("/")
+    };
+
     return (
-        <div className="h-screen">
+        <div className="pb-8">
             <IoIosArrowRoundBack size={30} className="cursor-pointer mb-3" onClick={() => Navigate(-1)} />
             <div>
                 <span className='text-2xl font-normal'>Notes</span>
                 <div className="mt-4 grid sm:grid-cols-2 gap-4 grid-cols-1">
+                    <Link to='profile'>
+                        <p className="text-sm text-muted-foreground">
+                            Profile
+                        </p>
+                        <div className="grid gap-4 mt-1 bg-card rounded-lg px-2 py-4 sm:px-4 sm:py-6 cursor-pointer">
+                            <div className="text-sm font-medium leading-none flex justify-between items-center">
+                                Profile <MdNavigateNext />
+                            </div>
+                        </div>
+                    </Link>
                     <div>
                         <p className="text-sm text-muted-foreground">
                             Cloud Services
@@ -27,9 +47,9 @@ export default function Settigs() {
                             <div className="text-sm font-medium leading-none flex justify-between items-center">
                                 Xiaomi Cloud <MdNavigateNext />
                             </div>
-                            <p className="text-sm font-medium leading-none flex justify-between items-center">
+                            <div className="text-sm font-medium leading-none flex justify-between items-center">
                                 Recentaly Deleted Items <MdNavigateNext />
-                            </p>
+                            </div>
                         </div>
                     </div>
                     <div>
@@ -99,9 +119,12 @@ export default function Settigs() {
                             <div className="text-sm font-medium leading-none flex justify-between items-center">
                                 Privacy <MdNavigateNext />
                             </div>
-                            <p className="text-sm font-normal leading-none text-red-700 flex justify-between items-center">
+                            <div className="text-sm font-normal leading-none text-destructive flex justify-between items-center">
                                 Permanently Deleted Account <MdNavigateNext />
-                            </p>
+                            </div>
+                            <div className="text-sm font-normal leading-none text-destructive flex justify-between items-center">
+                                Logout <MdNavigateNext onClick={handleLogout} />
+                            </div>
                         </div>
                     </div>
                 </div>
