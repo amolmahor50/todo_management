@@ -9,7 +9,7 @@ import { IoCheckmarkOutline } from "react-icons/io5";
 export default function AddTodo() {
     const Navigate = useNavigate();
     return (
-        <div className="sm:px-8 sm:py-4 px-4 py-2 h-screen">
+        <>
             <div className="flex justify-between items-center">
                 <IoIosArrowRoundBack onClick={() => Navigate(-1)} size={30} className="cursor-pointer" />
                 <div className="flex sm:gap-8 gap-6 items-center">
@@ -31,6 +31,6 @@ export default function AddTodo() {
                     className="bg-transparent border-none p-0 outline-none mt-4"
                 />
             </div>
-        </div>
+        </>
     )
 }

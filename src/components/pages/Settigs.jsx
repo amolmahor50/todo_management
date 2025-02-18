@@ -12,10 +12,14 @@ import { MdNavigateNext } from "react-icons/md";
 import { useContext } from "react";
 import { TodoContextData } from "../context/TodoContext";
 import { logout } from '../Authentication/auth'
+import { useTheme } from "@/components/theme-provider"
+import { useFontSize } from "../context/FontSizeContext";
 
 export default function Settigs() {
     const { setUser } = useContext(TodoContextData);
     const Navigate = useNavigate();
+    const { setTheme, theme } = useTheme();
+    const { fontSize, setFontSize } = useFontSize();
 
     const handleLogout = async () => {
         await logout();
@@ -24,7 +28,7 @@ export default function Settigs() {
     };
 
     return (
-        <div className="pb-8">
+        <>
             <IoIosArrowRoundBack size={30} className="cursor-pointer mb-3" onClick={() => Navigate(-1)} />
             <div>
                 <span className='text-2xl font-normal'>Notes</span>
@@ -45,7 +49,7 @@ export default function Settigs() {
                         </p>
                         <div className="grid gap-4 mt-1 bg-card rounded-lg px-2 py-4 sm:px-4 sm:py-6 cursor-pointer">
                             <div className="text-sm font-medium leading-none flex justify-between items-center">
-                                Xiaomi Cloud <MdNavigateNext />
+                                Notes Cloud <MdNavigateNext />
                             </div>
                             <div className="text-sm font-medium leading-none flex justify-between items-center">
                                 Recentaly Deleted Items <MdNavigateNext />
@@ -59,20 +63,52 @@ export default function Settigs() {
                         <div className="grid gap-4 mt-1 bg-card rounded-lg px-2 py-4 sm:px-4 sm:py-6 cursor-pointer">
                             <div className="flex justify-between items-center">
                                 <div className="text-sm font-medium leading-none">
+                                    Theme
+                                </div>
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger className="outline-none cursor-pointer flex items-center gap-1">
+                                        <p className="text-xs text-muted-foreground">
+                                            {theme.charAt(0).toUpperCase() + theme.slice(1)}
+                                        </p>
+                                        <ChevronsUpDown size={16} />
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent className="relative sm:right-8 right-6">
+                                        <DropdownMenuItem onClick={() => setTheme("light")} className={`${theme === "light" ? "bg-accent" : ""}`}>
+                                            Light
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => setTheme("dark")} className={`${theme === "dark" ? "bg-accent" : ""}`}>
+                                            Dark
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => setTheme("system")} className={`${theme === "system" ? "bg-accent" : ""}`}>
+                                            System
+                                        </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            </div>
+                            <div className="flex justify-between items-center">
+                                <div className="text-sm font-medium leading-none">
                                     Font Size
                                 </div>
                                 <DropdownMenu>
                                     <DropdownMenuTrigger className="outline-none cursor-pointer flex items-center gap-1">
                                         <p className="text-xs text-muted-foreground">
-                                            Small
+                                            {fontSize.charAt(0).toUpperCase() + fontSize.slice(1)}
                                         </p>
                                         <ChevronsUpDown size={16} />
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent className="relative sm:right-8 right-6">
-                                        <DropdownMenuItem>Small</DropdownMenuItem>
-                                        <DropdownMenuItem>Medium</DropdownMenuItem>
-                                        <DropdownMenuItem>Large</DropdownMenuItem>
-                                        <DropdownMenuItem>Huge</DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => setFontSize("small")} className={`${fontSize === "small" ? "bg-accent" : ""}`}>
+                                            Small
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => setFontSize("medium")} className={`${fontSize === "medium" ? "bg-accent" : ""}`}>
+                                            Medium
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => setFontSize("large")} className={`${fontSize === "large" ? "bg-accent" : ""}`}>
+                                            Large
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => setFontSize("huge")} className={`${fontSize === "huge" ? "bg-accent" : ""}`}>
+                                            Huge
+                                        </DropdownMenuItem>
                                     </DropdownMenuContent>
                                 </DropdownMenu>
                             </div>
@@ -104,7 +140,7 @@ export default function Settigs() {
                                 <p className="text-sm font-medium leading-none">
                                     High-priority reminders
                                 </p>
-                                <p className="text-sm text-muted-foreground">
+                                <p className="text-xs text-muted-foreground">
                                     Play sound even when Silent or DND mode is on
                                 </p>
                             </div>
@@ -119,16 +155,16 @@ export default function Settigs() {
                             <div className="text-sm font-medium leading-none flex justify-between items-center">
                                 Privacy <MdNavigateNext />
                             </div>
-                            <div className="text-sm font-normal leading-none text-destructive flex justify-between items-center">
+                            <div className="text-sm font-medium leading-none text-destructive flex justify-between items-center">
                                 Permanently Deleted Account <MdNavigateNext />
                             </div>
-                            <div className="text-sm font-normal leading-none text-destructive flex justify-between items-center">
+                            <div className="text-sm font-medium leading-none text-destructive flex justify-between items-center">
                                 Logout <MdNavigateNext onClick={handleLogout} />
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
+        </>
     )
 }

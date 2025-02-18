@@ -6,14 +6,14 @@ export default function Footer() {
     const location = useLocation();
 
     return (
-        <div className='flex justify-around items-center py-3 bg-muted z-50'>
+        <div className='flex justify-around items-center py-3 bg-muted'>
             <Link to='' className="flex flex-col gap-1 items-center cursor-pointer font-normal">
-                <PiNoteDuotone className="text-lg" color={location.pathname === "/todo-management" ? "black" : "gray"} />
-                <span className={`text-xs sm:text-sm ${location.pathname === "/todo-management" ? "font-bold text-black-800" : "text-gray-700"}`}>Notes</span>
+                <PiNoteDuotone />
+                <span className={`text-xs sm:text-sm ${location.pathname === "/todo-management" ? "font-semibold text-primary" : "text-foreground"}`}>Notes</span>
             </Link>
             <Link to='tasks' className="flex flex-col gap-1 items-center cursor-pointer font-normal">
-                <IoCheckboxOutline color={location.pathname === "/todo-management/tasks" ? "black" : "gray"} />
-                <span className={`text-xs sm:text-sm ${location.pathname === "/todo-management/tasks" ? "font-bold text-black-800" : "text-gray-700"}`}>Tasks</span>
+                <IoCheckboxOutline />
+                <span className={`text-xs sm:text-sm ${location.pathname === "/todo-management/tasks" ? "font-semibold text-primary" : "text-foreground"}`}>Tasks</span>
             </Link>
         </div>
     )

@@ -115,7 +115,7 @@ const router = createBrowserRouter([
 
 function App() {
   return (
-    <div className="sm:max-w-5xl w-full mx-auto sm:h-screen">
+    <div className="sm:max-w-5xl w-full mx-auto">
       <RouterProvider router={router} />
     </div>
   )
