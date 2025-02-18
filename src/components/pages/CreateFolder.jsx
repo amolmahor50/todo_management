@@ -2,17 +2,36 @@ import { IoIosArrowRoundBack } from "react-icons/io";
 import { RiDeleteBinLine } from "react-icons/ri";
 import { IoIosCheckmark } from "react-icons/io";
 import { IoIosAdd } from 'react-icons/io';
-import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useContext, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
+import { TodoContextData } from "../context/TodoContext";
 
 export default function CreateFolder() {
+    const { folderNote, setFolderNote } = useContext(TodoContextData);
     const [openCreateFolderPopUp, setOpenCreateFolderPopUp] = useState(false);
-    const [folderName, setFolderName] = useState("Unnamed folder");
+    const [folderName, setFolderName] = useState("");
+
+    // Utility function to convert text to a slug (e.g., "All" => "all")
+    const slugify = (text) => {
+        return text.toLowerCase().replace(/\s+/g, '-').replace(/[^\w\-]+/g, '');
+    };
 
     const Navigate = useNavigate();
+
+    // Function to handle adding a new folder
+    const handleAddFolder = () => {
+        // Check if the folder name is not empty and does not already exist
+        if (folderName.trim() !== "" && !folderNote.includes(folderName)) {
+            // Add the new folder name to the state
+            setFolderNote((prev) => [...prev, folderName]);
+            // Close the pop-up after adding the folder
+            setOpenCreateFolderPopUp(false);
+            setFolderName("");
+        }
+    };
 
     return (
         <>
@@ -21,12 +40,31 @@ export default function CreateFolder() {
                 <span>Folders</span>
                 <RiDeleteBinLine className="sm:text-xl text-lg cursor-pointer" />
             </div>
-            <div className="bg-card rounded-lg flex justify-between items-center mt-4 px-4 py-2" onClick={() => Navigate('todo-management')}>
-                <div className="flex items-center gap-1">
-                    <IoIosCheckmark size={30} color="orange" />
-                    <span>All</span>
-                </div>
-                <div>3</div>
+            <div className="grid gap-2 mt-6">
+                {
+                    folderNote.map((folder, index) => (
+                        <Link
+                            to={folder === "All" ? "/todo-management" : `/todo-management/${slugify(folder)}`}
+                            key={index}
+                            className="bg-card rounded-lg flex justify-between items-center px-4 py-2"
+                        >
+                            <div className="flex items-center gap-1">
+                                <IoIosCheckmark size={30} color="orange" />
+                                <span>{folder}</span>
+                            </div>
+                            <div>3</div>
+                        </Link>
+                    ))
+                }
+                <Link
+                    to="/todo-management"
+                    className="bg-card rounded-lg flex justify-between items-center px-4 py-2" >
+                    <div className="flex items-center gap-1">
+                        <IoIosCheckmark size={30} color="orange" />
+                        <span>Uncategorised</span>
+                    </div>
+                    <div>3</div>
+                </Link>
             </div>
             <div className="bg-card rounded-lg flex justify-center items-center mt-4 px-4 py-2">
                 <div className="flex flex-col gap-1 items-center cursor-pointer" onClick={() => setOpenCreateFolderPopUp(true)}>
@@ -64,7 +102,7 @@ export default function CreateFolder() {
                         />
                         <div className="grid grid-cols-2 gap-6">
                             <Button variant="secondary" onClick={() => setOpenCreateFolderPopUp(false)}>Cancel</Button>
-                            <Button variant="blue">OK</Button>
+                            <Button variant="blue" onClick={handleAddFolder}>OK</Button>
                         </div>
                     </motion.div>
                 </motion.div>

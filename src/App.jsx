@@ -13,6 +13,7 @@ import Tasks from "./components/pages/Tasks";
 import Notes from "./components/pages/Notes";
 import EditTodo from "./components/pages/EditTodo";
 import Profile from "./components/pages/Profile";
+import TodoItems from "./components/TodoItems";
 
 
 // LoginHandler Component
@@ -71,7 +72,21 @@ const router = createBrowserRouter([
         path: '',
         element: <ProtectedRoute>
           <Notes />
-        </ProtectedRoute>
+        </ProtectedRoute>,
+        children: [
+          {
+            path: '',
+            element: <ProtectedRoute>
+              <TodoItems />
+            </ProtectedRoute>
+          },
+          {
+            path: ':folder', // Dynamic folder route
+            element: <ProtectedRoute>
+              <TodoItems />
+            </ProtectedRoute>, // A new component to show folder-specific notes
+          },
+        ]
       },
       {
         path: 'tasks',

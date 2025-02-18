@@ -4,6 +4,8 @@ export const TodoContextData = createContext();
 
 export const TodoContextProvider = ({ children }) => {
     const [user, setUser] = useState(null);
+    const [folderNote, setFolderNote] = useState(["All",]);
+    const [todos, setTodos] = useState([]);
 
     useEffect(() => {
 
@@ -11,7 +13,7 @@ export const TodoContextProvider = ({ children }) => {
 
     return (
         <TodoContextData.Provider value={{
-            user, setUser
+            user, setUser, folderNote, setFolderNote, todos, setTodos
         }}>
             {children}
         </TodoContextData.Provider>
