@@ -1,4 +1,4 @@
-import { auth, GoogleProvider, firebaseStore, facebookProvider } from "../../lib/firebaseConfig";
+import { auth, GoogleProvider, db, facebookProvider } from "../../lib/firebaseConfig";
 import { signInWithPopup, signInWithEmailAndPassword, sendPasswordResetEmail, signOut } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import { toast } from "sonner";
@@ -33,7 +33,7 @@ export const loginWithGoogle = async () => {
         const user = result.user;
 
         if (user?.uid) {
-            const userRef = doc(firebaseStore, "users", user.uid);
+            const userRef = doc(db, "users", user.uid);
             const userDoc = await getDoc(userRef);
 
             const additionalInfo = userDoc.exists()
@@ -61,7 +61,7 @@ export const loginWithEmail = async (email, password) => {
         const user = userCredential.user;
 
         if (user?.uid) {
-            const userRef = doc(firebaseStore, "users", user.uid);
+            const userRef = doc(db, "users", user.uid);
             const userDoc = await getDoc(userRef);
 
             const additionalInfo = userDoc.exists() ?
@@ -94,7 +94,7 @@ export const loginWithFacebook = async () => {
         const user = result.user;
 
         if (user?.uid) {
-            const userRef = doc(firebaseStore, "users", user.uid);
+            const userRef = doc(db, "users", user.uid);
             const userDoc = await getDoc(userRef);
 
             const additionalInfo = userDoc.exists()

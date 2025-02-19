@@ -5,7 +5,7 @@ import { useContext } from "react";
 import { TodoContextData } from "./context/TodoContext";
 
 export default function Navbar() {
-    const { folderNote } = useContext(TodoContextData);
+    const { folderName } = useContext(TodoContextData);
 
     const location = useLocation();
     const navigate = useNavigate();
@@ -13,14 +13,14 @@ export default function Navbar() {
     // Get the folder name from the pathname (excluding "/todo-management/")
     const currentFolder = location.pathname.split('/').pop().toLowerCase(); // Convert to lowercase
 
-    // Convert folderNote items to lowercase and check if currentFolder exists
-    const isFolder = folderNote.map(folder => folder.toLowerCase()).includes(currentFolder);
+    // Convert folderName items to lowercase and check if currentFolder exists
+    const isFolder = folderName.map(folder => folder?.name.toLowerCase()).includes(currentFolder);
 
     return (
         <div className="flex justify-between items-center bg-muted px-8 py-4">
             <div></div>
             <div className="text-medium">
-                {location.pathname === "/todo-management" || isFolder ? "Notes" : "Tasks"}
+                {location.pathname === "/todo-management" || location.pathname === "/todo-management/uncategorised" || isFolder ? "Notes" : "Tasks"}
             </div>
             <div className="flex gap-6 items-center">
                 {location.pathname === "/todo-management" || isFolder ? (
