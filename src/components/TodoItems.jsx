@@ -1,29 +1,43 @@
-import { useContext } from "react";
+import { useContext, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { TodoContextData } from "./context/TodoContext";
-import { motion } from "framer-motion";
+import { fetchAllFoldersTasks, fetchTodosRealtime, TodoContextData } from "./context/TodoContext";
 
 export default function TodoItems() {
-    const { todos } = useContext(TodoContextData);
-    const Navigate = useNavigate();
+    const { Notes, user, setNotes, selectedFolder } = useContext(TodoContextData);
+    const navigate = useNavigate();
 
     const handleEditTodo = (id) => {
-        Navigate(`/editTodo/${id}`);
+        navigate(`/editTodo/${id}`);
     };
+
+    useEffect(() => {
+        if (selectedFolder === "All") {
+            fetchAllFoldersTasks(user.uid, setNotes);
+            return;
+        }
+
+        const unsubscribe = fetchTodosRealtime(user.uid, selectedFolder, setNotes);
+
+        return () => unsubscribe && unsubscribe();
+    }, [user, selectedFolder]);
 
     return (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
-            <motion.div
-                onClick={() => handleEditTodo(12)}
-                className="bg-card rounded-lg px-4 py-3 flex flex-col gap-1 cursor-pointer shadow-sm hover:shadow-lg"
-                initial={{ opacity: 0, y: 20 }} // Start with opacity 0 and slide from below
-                animate={{ opacity: 1, y: 0 }} // Animate to full opacity and slide into place
-                transition={{ duration: 0.5 }} // Transition duration for the animation
-            >
-                <p className="text-sm font-medium leading-none">Amol</p>
-                <p className="text-sm text-muted-foreground">Description</p>
-                <p className="text-xs text-primary">18 February 7:15 PM</p>
-            </motion.div>
+            {Notes.length > 0 ? (
+                Notes.map((Note, index) => (
+                    <div
+                        key={index}
+                        onClick={() => handleEditTodo(Note.id)}
+                        className="bg-card rounded-lg px-4 py-3 flex flex-col gap-1 cursor-pointer shadow-sm hover:shadow-lg"
+                    >
+                        <p className="text-sm font-medium leading-none">{Note.title}</p>
+                        <p className="text-sm text-muted-foreground">{Note.description}</p>
+                        <p className="text-xs text-primary">{Note.date}</p>
+                    </div>
+                ))
+            ) : (
+                <p className="text-center text-gray-500 col-span-2">No tasks found.</p>
+            )}
         </div>
     );
 }

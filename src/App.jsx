@@ -80,12 +80,6 @@ const router = createBrowserRouter([
               <TodoItems />
             </ProtectedRoute>
           },
-          {
-            path: ':folder', // Dynamic folder route
-            element: <ProtectedRoute>
-              <TodoItems />
-            </ProtectedRoute>, // A new component to show folder-specific notes
-          },
         ]
       },
       {

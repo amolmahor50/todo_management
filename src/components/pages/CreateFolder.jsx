@@ -10,7 +10,7 @@ import { useContext, useEffect, useState } from "react";
 import { createFolder, fetchFoldersRealtime, TodoContextData } from "../context/TodoContext";
 
 export default function CreateFolder() {
-    const { user, folderName, setFolderName } = useContext(TodoContextData);
+    const { user, folderName, setFolderName, Notes } = useContext(TodoContextData);
     const Navigate = useNavigate();
     const [openCreateFolderPopUp, setOpenCreateFolderPopUp] = useState(false);
     const [inputFolderName, setInputFolderName] = useState("");
@@ -23,9 +23,10 @@ export default function CreateFolder() {
     useEffect(() => {
         const unsubscribe = fetchFoldersRealtime(user.uid, setFolderName);
 
-        return () => unsubscribe && unsubscribe(); // Cleanup listener
+        return () => unsubscribe && unsubscribe();
     }, [user.uid]);
 
+    console.log("folderName", folderName)
     return (
         <>
             <div className="flex justify-between items-center">
@@ -36,22 +37,22 @@ export default function CreateFolder() {
             <div className="grid gap-2 mt-6">
                 <Link
                     to="/todo-management"
-                    className="bg-card rounded-lg flex justify-between items-center px-4 py-2" >
+                    className="bg-card rounded-lg flex justify-between items-center px-4 py-2 text-sm" >
                     <div className="flex items-center gap-1">
                         <IoIosCheckmark size={30} color="orange" />
                         <span>All</span>
                     </div>
-                    <div>3</div>
+                    <div>{Notes.length}</div>
                 </Link>
                 {
                     folderName?.map((folder, index) => (
                         <Link
                             key={index}
                             to={`/todo-management/${folder.name}`}
-                            className="bg-card rounded-lg flex justify-between items-center px-4 py-2" >
+                            className="bg-card rounded-lg flex justify-between items-center px-4 py-2 text-sm" >
                             <div className="flex items-center gap-1">
                                 <IoIosCheckmark size={30} color="orange" />
-                                <span>{folder.name}</span>
+                                <span>{folder.id}</span>
                             </div>
                             <div>3</div>
                         </Link>
@@ -59,12 +60,12 @@ export default function CreateFolder() {
                 }
                 <Link
                     to="/todo-management"
-                    className="bg-card rounded-lg flex justify-between items-center px-4 py-2" >
+                    className="bg-card rounded-lg flex justify-between items-center px-4 py-2 text-sm" >
                     <div className="flex items-center gap-1">
                         <IoIosCheckmark size={30} color="orange" />
                         <span>Uncategorised</span>
                     </div>
-                    <div>3</div>
+                    <div>{Notes.length}</div>
                 </Link>
             </div>
             <div className="bg-card rounded-lg flex justify-center items-center mt-4 px-4 py-2">

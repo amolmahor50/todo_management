@@ -1,23 +1,10 @@
 import { useContext, useEffect } from 'react'
 import SearchNotes from '../SearchNotes'
-import { Link, Outlet, useLocation } from 'react-router-dom'
+import { Outlet } from 'react-router-dom'
 import { fetchFoldersRealtime, TodoContextData } from '../context/TodoContext'
 
 function Notes() {
-    const { user, folderName, setFolderName } = useContext(TodoContextData);
-
-    const location = useLocation();
-
-    // Utility function to convert text to a slug (e.g., "All" => "all")
-    const slugify = (text) => {
-        return text.toLowerCase().replace(/\s+/g, '-').replace(/[^\w\-]+/g, '');
-    };
-
-    // Function to check if the current folder is active
-    const isActive = (folder) => {
-        return location.pathname === `/todo-management/${slugify(folder)}` || (folder === "All" && location.pathname === "/todo-management");
-    };
-
+    const { user, folderName, setFolderName, selectedFolder, setSelectedFolder } = useContext(TodoContextData);
     useEffect(() => {
         const unsubscribe = fetchFoldersRealtime(user.uid, setFolderName);
 
@@ -30,34 +17,28 @@ function Notes() {
             <span className='text-2xl font-normal ml-2'>Notes</span>
             <div className='flex gap-2 items-center sm:ml-2 mt-2 overflow-scroll no-scrollbar'>
                 {folderName.length > 0 &&
-                    <Link
-                        to='/todo-management'
-                        className={`cursor-pointer text-xs px-3 py-1 rounded-lg bg-secondary border ${location.pathname === '/todo-management' && "bg-yellow-400 text-primary"}`}
-                    >
+                    <button
+                        onClick={() => setSelectedFolder("All")}
+                        className={`px-3 py-1 rounded-md border text-xs ${selectedFolder === "All" && "bg-yellow-400"}`}>
                         All
-                    </Link>
+                    </button>
                 }
-                {
-                    folderName?.map((folder, index) => (
-                        <Link
-                            key={index}
-                            to={`/todo-management/${slugify(folder.name)}`}
-                            className={`cursor-pointer text-xs px-3 py-1 rounded-lg bg-secondary border ${isActive(folder.name) && "bg-yellow-400 text-primary"}`}
-                        >
-                            {folder.name}
-                        </Link>
-                    ))
+                {folderName?.map((folder, index) => (
+                    <button
+                        key={index}
+                        onClick={() => setSelectedFolder(folder.name)}
+                        className={`px-3 py-1 rounded-md border text-xs ${selectedFolder === folder.name && "bg-yellow-400"}`}>
+                        {folder.id}
+                    </button>
+                ))
                 }
-                {
-                    folderName.length > 0 &&
-                    <Link
-                        to='/todo-management/uncategorised'
-                        className={`cursor-pointer text-xs px-3 py-1 rounded-lg bg-secondary border ${location.pathname === '/todo-management/uncategorised' && "bg-yellow-400 text-primary"}`}
-                    >
+                {folderName.length > 0 &&
+                    <button
+                        onClick={() => setSelectedFolder("Uncategorised")}
+                        className={`px-3 py-1 rounded-md border text-xs ${selectedFolder === "Uncategorised" && "bg-yellow-400"}`}>
                         Uncategorised
-                    </Link>
+                    </button>
                 }
-
             </div>
             <Outlet />
         </div >

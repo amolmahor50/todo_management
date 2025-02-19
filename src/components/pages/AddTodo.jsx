@@ -4,8 +4,11 @@ import { IoReturnUpBackOutline, IoReturnUpForwardOutline, IoCheckmarkOutline } f
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useState } from "react";
+import { addTodoData, TodoContextData } from "../context/TodoContext";
+import { useContext } from "react";
 
 export default function AddTodo() {
+    const { user, selectedFolder } = useContext(TodoContextData);
     const Navigate = useNavigate();
 
     // Utility function to format the current date and time
@@ -37,7 +40,9 @@ export default function AddTodo() {
 
     // Save Todo Data to Firestore
     const handleSaveTodo = async () => {
-        console.log(TodoData);
+        const folderTab = selectedFolder === "All" ? "Uncategorised" : selectedFolder;
+        await addTodoData(user.uid, folderTab, TodoData);
+        Navigate('/todo-management')
     };
 
     return (
