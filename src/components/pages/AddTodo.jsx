@@ -3,14 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { IoReturnUpBackOutline, IoReturnUpForwardOutline, IoCheckmarkOutline } from "react-icons/io5";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { useContext, useState } from "react";
-import { TodoContextData } from "../context/TodoContext";
-import { collection, addDoc } from "firebase/firestore";
-import { firebaseStore } from "../../lib/firebaseConfig";
-import { toast } from "sonner";
+import { useState } from "react";
 
 export default function AddTodo() {
-    const { user } = useContext(TodoContextData);
     const Navigate = useNavigate();
 
     // Utility function to format the current date and time
@@ -42,24 +37,7 @@ export default function AddTodo() {
 
     // Save Todo Data to Firestore
     const handleSaveTodo = async () => {
-        if (!user?.uid) {
-            toast.error("User not logged in");
-            return;
-        }
-
-        try {
-            await addDoc(collection(firebaseStore, "users", user.uid, "todos"), {
-                title: TodoData.title,
-                description: TodoData.description,
-                date: TodoData.date
-            });
-            toast.success("Todo saved successfully!");
-            setTodoData({ title: "", description: "", date: formatDate() });
-            Navigate('/')
-        } catch (error) {
-            console.error("Error saving todo:", error);
-            toast.error("Failed to save todo.");
-        }
+        console.log(TodoData);
     };
 
     return (

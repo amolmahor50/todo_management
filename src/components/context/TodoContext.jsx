@@ -1,5 +1,5 @@
 import { createContext, useEffect, useState } from "react";
-import { serverTimestamp, collection, addDoc, getDocs } from "firebase/firestore";
+import { serverTimestamp, collection, addDoc, onSnapshot } from "firebase/firestore";
 import { db } from "../../lib/firebaseConfig";
 import { toast } from "sonner";
 
@@ -44,26 +44,24 @@ export const createFolder = async (userId, folderName) => {
 };
 
 // Fetch folder inside a user's collection
-export const fetchFolders = async (userId) => {
+export const fetchFoldersRealtime = (userId, setFolders) => {
     if (!userId) {
         console.error("User ID is required!");
-        return [];
+        return;
     }
 
     try {
         const folderRef = collection(db, "users", userId, "folders");
 
-        const snapshot = await getDocs(folderRef);
-
-        const folders = snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-        }));
-
-        return folders;
+        return onSnapshot(folderRef, (snapshot) => {
+            const folders = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }));
+            setFolders(folders);
+        });
     } catch (error) {
         console.error("Error fetching folders:", error.message);
         toast.error("Error fetching folders:", error.message);
-        return [];
     }
 };

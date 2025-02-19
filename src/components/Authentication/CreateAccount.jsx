@@ -11,7 +11,7 @@ import { createUserWithEmailAndPassword, getAuth, updateProfile } from "firebase
 import { doc, setDoc } from "firebase/firestore"
 import { toast } from "sonner"
 import { TodoContextData } from "../context/TodoContext"
-import { firebaseStore } from "../../lib/firebaseConfig"
+import { db } from "../../lib/firebaseConfig"
 
 const required = [
     { regex: /.{8,}/, message: "Password must be at least 8 characters long." },
@@ -108,7 +108,7 @@ export function CreateAccount({ className, ...props }) {
             });
 
             // Save firstName and lastName separately in Firestore
-            await setDoc(doc(firebaseStore, "users", user.uid), {
+            await setDoc(doc(db, "users", user.uid), {
                 uid: user.uid,
                 firstName,
                 lastName,

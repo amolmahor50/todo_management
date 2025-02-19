@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { useContext, useEffect, useState } from "react";
-import { createFolder, fetchFolders, TodoContextData } from "../context/TodoContext";
+import { createFolder, fetchFoldersRealtime, TodoContextData } from "../context/TodoContext";
 
 export default function CreateFolder() {
     const { user, folderName, setFolderName } = useContext(TodoContextData);
@@ -21,11 +21,9 @@ export default function CreateFolder() {
     }
 
     useEffect(() => {
-        const getFolders = async () => {
-            const data = await fetchFolders(user.uid);
-            setFolderName(data);
-        };
-        getFolders();
+        const unsubscribe = fetchFoldersRealtime(user.uid, setFolderName);
+
+        return () => unsubscribe && unsubscribe(); // Cleanup listener
     }, [user.uid]);
 
     return (

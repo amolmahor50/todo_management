@@ -1,7 +1,7 @@
 import { useContext, useEffect } from 'react'
 import SearchNotes from '../SearchNotes'
 import { Link, Outlet, useLocation } from 'react-router-dom'
-import { fetchFolders, TodoContextData } from '../context/TodoContext'
+import { fetchFoldersRealtime, TodoContextData } from '../context/TodoContext'
 
 function Notes() {
     const { user, folderName, setFolderName } = useContext(TodoContextData);
@@ -19,14 +19,11 @@ function Notes() {
     };
 
     useEffect(() => {
-        const getFolders = async () => {
-            const data = await fetchFolders(user.uid);
-            setFolderName(data);
-        };
-        getFolders();
+        const unsubscribe = fetchFoldersRealtime(user.uid, setFolderName);
+
+        return () => unsubscribe && unsubscribe();
     }, [user.uid]);
 
-    console.log("folderName", folderName);
     return (
         <div className='flex flex-col'>
             <SearchNotes />
