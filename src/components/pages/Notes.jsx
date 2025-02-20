@@ -27,7 +27,7 @@ function Notes() {
                     <button
                         key={index}
                         onClick={() => setSelectedFolder(folder.name)}
-                        className={`px-3 py-1 rounded-md border text-xs flex items-center gap-1 
+                        className={`px-3 py-1 rounded-md border text-xs flex items-center gap-1 min-w-fit
                                 ${selectedFolder === folder.name ? "bg-yellow-400" : ""}`}>
                         {folder.name}
                         <span className="text-gray-500 text-xs">({folder.taskCount})</span>

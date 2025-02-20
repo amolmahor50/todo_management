@@ -1,5 +1,5 @@
 import { createContext, useState } from "react";
-import { serverTimestamp, collection, addDoc, onSnapshot, doc, setDoc, getDocs } from "firebase/firestore";
+import { serverTimestamp, collection, addDoc, onSnapshot, doc, setDoc, getDocs, getDoc, updateDoc, arrayUnion } from "firebase/firestore";
 import { db } from "../../lib/firebaseConfig";
 import { toast } from "sonner";
 
@@ -23,9 +23,29 @@ export const TodoContextProvider = ({ children }) => {
 // Create a new folder inside a user's collection
 export const createFolder = async (userId, folderName) => {
     try {
+        if (!userId || !folderName) {
+            toast.error("Invalid user ID or folder name.");
+            return;
+        }
+
+        const userRef = doc(db, "users", userId);
+        const userDoc = await getDoc(userRef);
+
+        if (!userDoc.exists()) {
+            await setDoc(userRef, { folders: ["All", folderName, "Uncategorised"] });
+        } else {
+            let existingFolders = userDoc.data().folders || [];
+
+            // Ensure "All" is first and "Uncategorised" is last
+            existingFolders = existingFolders.filter(folder => folder !== "All" && folder !== "Uncategorised");
+            existingFolders = ["All", ...existingFolders, folderName, "Uncategorised"];
+
+            await updateDoc(userRef, {
+                folders: existingFolders,
+            });
+        }
 
         const folderRef = doc(db, "users", userId, "todos", folderName);
-
         await setDoc(folderRef, {});
 
         toast.success(`Folder "${folderName}" created successfully!`);
@@ -33,36 +53,63 @@ export const createFolder = async (userId, folderName) => {
         toast.error(`Error creating folder: ${error.message}`);
         console.error("Error creating folder:", error.message);
     }
-}
+};
 
 // Fetch folder inside a user's collection
-export const fetchFoldersRealtime = (userId, setFolders) => {
-    try {
-        const folderRef = collection(db, "users", userId, "todos");
+export const fetchFoldersRealtime = (userId, setFolderName) => {
+    if (!userId) return;
 
-        return onSnapshot(folderRef, (snapshot) => {
-            const folders = snapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            }));
-            setFolders(folders);
-        });
-    } catch (error) {
+    const userRef = doc(db, "users", userId);
+
+    return onSnapshot(userRef, async (docSnap) => {
+        if (docSnap.exists()) {
+            const data = docSnap.data();
+            let folders = data.folders || [];
+
+            // Ensure "All" is at the beginning and "Uncategorised" is at the end
+            folders = folders.filter(folder => folder !== "All" && folder !== "Uncategorised");
+            folders.unshift("All");
+            folders.push("Uncategorised");
+
+            let folderData = [];
+            let totalTasks = 0; // To store total task count
+
+            for (const folder of folders) {
+                const tasksRef = collection(db, "users", userId, "todos", folder, "tasks");
+                const tasksSnapshot = await getDocs(tasksRef);
+
+                let taskCount = tasksSnapshot.size;
+                totalTasks += taskCount; // Add count to totalTasks
+
+                folderData.push({
+                    name: folder,
+                    taskCount: taskCount,
+                });
+            }
+
+            // Update "All" folder to show the total task count
+            folderData = folderData.map(folder =>
+                folder.name === "All" ? { ...folder, taskCount: totalTasks } : folder
+            );
+
+            setFolderName(folderData);
+        } else {
+            setFolderName([{ name: "All", taskCount: 0 }, { name: "Uncategorised", taskCount: 0 }]);
+        }
+    }, (error) => {
         console.error("Error fetching folders:", error.message);
-        toast.error("Error fetching folders:", error.message);
-    }
+    });
 };
 
 // add todo in which folder are selected in this added 
-export const addTodoData = async (userId, folderName, TodoData) => {
+export const addTodoData = async (userId, folderName, todoData) => {
     try {
         const todoRef = collection(db, "users", userId, "todos", folderName, "tasks");
 
-        // Add the document
         await addDoc(todoRef, {
-            title: TodoData.title,
-            description: TodoData.description,
-            date: TodoData.date,
+            title: todoData.title,
+            description: todoData.description,
+            date: todoData.date,
             createdAt: serverTimestamp(),
         });
 
@@ -74,46 +121,67 @@ export const addTodoData = async (userId, folderName, TodoData) => {
 };
 
 export const fetchTodosRealtime = (userId, folderName, setNotes) => {
-    try {
-        const todosRef = collection(db, "users", userId, "todos", folderName, "tasks");
+    const todosRef = collection(db, "users", userId, "todos", folderName, "tasks");
 
-        return onSnapshot(todosRef, (snapshot) => {
-            const todos = snapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data(),
-            }));
-            setNotes(todos);
-        });
-    } catch (error) {
+    const unsubscribe = onSnapshot(todosRef, (snapshot) => {
+        const todos = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data(),
+        }));
+        setNotes(todos);
+    }, (error) => {
         console.error("Error fetching todos:", error.message);
-    }
+    });
+
+    return unsubscribe;
 };
 
 // Fetch all tasks across all folders
-export const fetchAllFoldersTasks = async (userId, setNotes) => {
-    try {
-        const foldersRef = collection(db, "users", userId, "todos");
-        const foldersSnapshot = await getDocs(foldersRef);
+export const fetchAllFoldersTasks = (userId, setNotes) => {
+    if (!userId) return;
 
+    const foldersRef = collection(db, "users", userId, "todos");
+
+    return onSnapshot(foldersRef, async (foldersSnapshot) => {
         let allTasks = [];
+        let folderListeners = [];
 
-        // Loop through each folder and fetch its tasks
-        for (const folderDoc of foldersSnapshot.docs) {
-            const folderId = folderDoc.id;
+        const fetchTasks = async (folderId) => {
             const tasksRef = collection(db, "users", userId, "todos", folderId, "tasks");
-            const tasksSnapshot = await getDocs(tasksRef);
+            return onSnapshot(tasksRef, (tasksSnapshot) => {
+                const tasks = tasksSnapshot.docs.map(doc => ({
+                    id: doc.id,
+                    folder: folderId,
+                    ...doc.data(),
+                }));
 
-            const tasks = tasksSnapshot.docs.map(doc => ({
-                id: doc.id,
-                folder: folderId,
-                ...doc.data(),
-            }));
+                allTasks = [...allTasks, ...tasks];
+                setNotes([...allTasks]);
+            });
+        };
 
-            allTasks = [...allTasks, ...tasks];
-        }
+        // Fetch tasks from all user-defined folders
+        foldersSnapshot.docs.forEach(folderDoc => {
+            folderListeners.push(fetchTasks(folderDoc.id));
+        });
 
-        setNotes(allTasks);
-    } catch (error) {
-        console.error("Error fetching all tasks:", error.message);
-    }
-}
+        // Fetch tasks from "Uncategorised" folder explicitly
+        const uncategorisedRef = collection(db, "users", userId, "todos", "Uncategorised", "tasks");
+        folderListeners.push(
+            onSnapshot(uncategorisedRef, (tasksSnapshot) => {
+                const uncategorisedTasks = tasksSnapshot.docs.map(doc => ({
+                    id: doc.id,
+                    folder: "Uncategorised",
+                    ...doc.data(),
+                }));
+
+                allTasks = [...allTasks, ...uncategorisedTasks];
+                setNotes([...allTasks]);
+            })
+        );
+
+        return () => {
+            folderListeners.forEach(unsub => unsub());
+        };
+    });
+};
