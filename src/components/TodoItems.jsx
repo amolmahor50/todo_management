@@ -6,8 +6,9 @@ export default function TodoItems() {
     const { Notes, user, setNotes, selectedFolder } = useContext(TodoContextData);
     const navigate = useNavigate();
 
-    const handleEditTodo = (id) => {
-        navigate(`/editTodo/${id}`);
+    const handleEditTodo = (userId, folder, taskId) => {
+        // Construct the path to navigate to the edit page
+        navigate(`/editTodo/${userId}/${folder}/${taskId}`);
     };
 
     useEffect(() => {
@@ -21,13 +22,20 @@ export default function TodoItems() {
         return () => unsubscribe && unsubscribe();
     }, [user, selectedFolder]);
 
+    // Sort Notes by date in descending order (most recent first)
+    const sortedNotes = Notes.sort((a, b) => {
+        const dateA = new Date(a.date); // Convert date strings to Date objects
+        const dateB = new Date(b.date);
+        return dateB - dateA; // For descending order
+    });
+
     return (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
-            {Notes.length > 0 ? (
-                Notes.map((Note, index) => (
+            {sortedNotes.length > 0 ? (
+                sortedNotes.map((Note, index) => (
                     <div
                         key={index}
-                        onClick={() => handleEditTodo(Note.id)}
+                        onClick={() => handleEditTodo(user.uid, Note.folder, Note.id)}
                         className="bg-card rounded-lg px-4 py-3 flex flex-col gap-1 cursor-pointer shadow-sm hover:shadow-lg"
                     >
                         <p className="text-sm font-medium leading-none">{Note.title}</p>
@@ -36,7 +44,7 @@ export default function TodoItems() {
                     </div>
                 ))
             ) : (
-                <p className="text-center text-gray-500 col-span-2">No tasks found.</p>
+                <p className="text-center text-gray-500 col-span-2 mt-8">No tasks found.</p>
             )}
         </div>
     );

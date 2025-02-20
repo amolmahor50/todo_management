@@ -1,12 +1,15 @@
 import { IoIosArrowRoundBack } from "react-icons/io";
 import { IoReturnUpBackOutline, IoReturnUpForwardOutline, IoCheckmarkOutline } from "react-icons/io5";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { useState } from "react";
+import { useContext, useEffect, useState } from "react";
+import { EditedfetchTodoById, TodoContextData, updateTodoIndb } from "../context/TodoContext";
 
 export default function EditTodo() {
+    const { user } = useContext(TodoContextData);
     const Navigate = useNavigate();
+    const { userId, folder, taskId } = useParams();
 
     // Utility function to format the current date and time
     const formatDate = () => {
@@ -27,6 +30,20 @@ export default function EditTodo() {
         date: "",
     });
 
+    // Fetch Todo from Firestore
+    useEffect(() => {
+        const fetchData = async () => {
+            if (userId && folder && taskId) {
+                const data = await EditedfetchTodoById(userId, folder, taskId);
+                if (data) {
+                    setTodoData(data);
+                }
+            }
+        };
+
+        fetchData();
+    }, [userId, folder, taskId]);
+
     // Handle input change
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -36,6 +53,19 @@ export default function EditTodo() {
         }));
     };
 
+    // Handle save action
+    const handleSave = () => {
+        const updatedTodo = {
+            title: todoData.title,
+            description: todoData.description,
+            date: formatDate(),
+        };
+
+        updateTodoIndb(userId, folder, taskId, updatedTodo);
+
+        Navigate(-1);
+    };
+
     return (
         <>
             <div className="flex justify-between items-center">
@@ -43,7 +73,7 @@ export default function EditTodo() {
                 <div className="flex sm:gap-8 gap-6 items-center">
                     <IoReturnUpBackOutline size={22} className="cursor-pointer" />
                     <IoReturnUpForwardOutline size={22} className="cursor-pointer" />
-                    <IoCheckmarkOutline size={22} className="cursor-pointer" />
+                    <IoCheckmarkOutline size={22} className="cursor-pointer" onClick={handleSave} />
                 </div>
             </div>
 
@@ -56,7 +86,7 @@ export default function EditTodo() {
                     className="font-medium leading-none bg-transparent border-none p-0"
                 />
                 <p className="text-xs text-muted-foreground">
-                    {todoData.date} | {todoData.description.length} characters
+                    {formatDate()} | {todoData.title.length} characters
                 </p>
                 <Textarea
                     name="description"

@@ -109,7 +109,7 @@ const router = createBrowserRouter([
     </ProtectedRoute>
   },
   {
-    path: 'editTodo/:id',
+    path: "editTodo/:userId/:folder/:taskId",
     element: <ProtectedRoute>
       <EditTodo />
     </ProtectedRoute>

@@ -277,3 +277,36 @@ export const updateFolderName = async (userId, oldName, newName) => {
         toast.error(`Error updating folder name: ${error.message}`);
     }
 };
+
+export const EditedfetchTodoById = async (userId, folderName, todoId) => {
+    try {
+        if (!userId || !folderName || !todoId) {
+            console.error("Invalid parameters: Missing userId, folderName, or todoId.");
+            return null;
+        }
+
+        const todoRef = doc(db, "users", userId, "todos", folderName, "tasks", todoId);
+        const todoSnap = await getDoc(todoRef);
+
+        if (todoSnap.exists()) {
+            return { id: todoSnap.id, ...todoSnap.data() };
+        } else {
+            console.error("Todo not found!");
+            return null;
+        }
+    } catch (error) {
+        console.error("Error fetching todo:", error.message);
+        return null;
+    }
+};
+
+export const updateTodoIndb = async (userId, folderName, todoId, updatedData) => {
+    try {
+        const todoRef = doc(db, "users", userId, "todos", folderName, "tasks", todoId);
+        await updateDoc(todoRef, updatedData);
+        console.log("Todo updated successfully!");
+        toast.success("Todo updated successfully!");
+    } catch (error) {
+        console.error("Error updating todo:", error.message);
+    }
+};
