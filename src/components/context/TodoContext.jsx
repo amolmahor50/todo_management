@@ -1,5 +1,5 @@
 import { createContext, useState } from "react";
-import { serverTimestamp, collection, addDoc, onSnapshot, doc, setDoc, getDocs, getDoc, updateDoc, arrayUnion } from "firebase/firestore";
+import { serverTimestamp, collection, addDoc, onSnapshot, doc, setDoc, getDocs, getDoc, updateDoc, arrayUnion, deleteDoc, arrayRemove } from "firebase/firestore";
 import { db } from "../../lib/firebaseConfig";
 import { toast } from "sonner";
 
@@ -28,30 +28,47 @@ export const createFolder = async (userId, folderName) => {
             return;
         }
 
+        // Check if the user document exists
         const userRef = doc(db, "users", userId);
         const userDoc = await getDoc(userRef);
 
-        if (!userDoc.exists()) {
-            await setDoc(userRef, { folders: ["All", folderName, "Uncategorised"] });
+        let existingFolders = [];
+
+        if (userDoc.exists()) {
+            existingFolders = userDoc.data().folders || [];
+
+            // Check if the folder name already exists (case insensitive)
+            const isFolderExists = existingFolders.some(folder => folder.toLowerCase() === folderName.toLowerCase());
+
+            if (isFolderExists) {
+                toast.error(`Folder "${folderName}" already exists!`);
+                return;
+            }
         } else {
-            let existingFolders = userDoc.data().folders || [];
-
-            // Ensure "All" is first and "Uncategorised" is last
-            existingFolders = existingFolders.filter(folder => folder !== "All" && folder !== "Uncategorised");
-            existingFolders = ["All", ...existingFolders, folderName, "Uncategorised"];
-
-            await updateDoc(userRef, {
-                folders: existingFolders,
-            });
+            // If the user doc does not exist, create it with default folders
+            await setDoc(userRef, { folders: ["All", "Uncategorised", folderName] });
+            toast.success(`Folder "${folderName}" created successfully!`);
+            return;
         }
 
+        // Ensure "All" is first and "Uncategorised" is last
+        existingFolders = existingFolders.filter(folder => folder !== "All" && folder !== "Uncategorised");
+        existingFolders = ["All", ...existingFolders, folderName, "Uncategorised"];
+
+        await updateDoc(userRef, { folders: existingFolders });
+
+        // Create the folder document if it does not exist
         const folderRef = doc(db, "users", userId, "todos", folderName);
-        await setDoc(folderRef, {});
+        const folderDoc = await getDoc(folderRef);
+
+        if (!folderDoc.exists()) {
+            await setDoc(folderRef, {}); // Create the folder document
+        }
 
         toast.success(`Folder "${folderName}" created successfully!`);
     } catch (error) {
         toast.error(`Error creating folder: ${error.message}`);
-        console.error("Error creating folder:", error.message);
+        console.error("Error creating folder:", error);
     }
 };
 
@@ -184,4 +201,79 @@ export const fetchAllFoldersTasks = (userId, setNotes) => {
             folderListeners.forEach(unsub => unsub());
         };
     });
+};
+
+export const deleteFolder = async (userId, folderId) => {
+    try {
+        // Step 1: Delete all tasks inside the folder
+        const tasksRef = collection(db, "users", userId, "todos", folderId, "tasks");
+        const tasksSnapshot = await getDocs(tasksRef);
+        const deletePromises = tasksSnapshot.docs.map((task) => deleteDoc(task.ref));
+        await Promise.all(deletePromises);
+
+        // Step 2: Wait to ensure tasks are deleted
+        await new Promise((resolve) => setTimeout(resolve, 500));
+
+        // Step 3: Delete the folder itself
+        const folderRef = doc(db, "users", userId, "todos", folderId);
+        await deleteDoc(folderRef);
+
+        // Step 4: Remove folderId from the 'folders' array in user document
+        const userRef = doc(db, "users", userId);
+        await updateDoc(userRef, {
+            folders: arrayRemove(folderId), // Remove the deleted folder name from the array
+        });
+
+        console.log(`Folder '${folderId}' and its tasks deleted successfully`);
+    } catch (error) {
+        console.error("Error deleting folder:", error);
+        throw error;
+    }
+};
+
+export const updateFolderName = async (userId, oldName, newName) => {
+    try {
+        if (!userId || !oldName || !newName || oldName === newName) {
+            toast.error("Invalid folder names.");
+            return;
+        }
+
+        const oldFolderRef = doc(db, "users", userId, "todos", oldName);
+        const newFolderRef = doc(db, "users", userId, "todos", newName);
+        const userRef = doc(db, "users", userId);
+
+        // Step 1: Get all tasks from the old folder
+        const oldTasksRef = collection(db, "users", userId, "todos", oldName, "tasks");
+        const tasksSnapshot = await getDocs(oldTasksRef);
+
+        // Step 2: Copy all tasks to the new folder
+        for (const taskDoc of tasksSnapshot.docs) {
+            const taskData = taskDoc.data();
+            await setDoc(doc(db, "users", userId, "todos", newName, "tasks", taskDoc.id), taskData);
+        }
+
+        // Step 3: Delete all tasks from the old folder
+        for (const taskDoc of tasksSnapshot.docs) {
+            await deleteDoc(taskDoc.ref);
+        }
+
+        // Step 4: Delete the old folder document
+        await deleteDoc(oldFolderRef);
+
+        // Step 5: Update the folders list in the user document
+        const userDoc = await getDoc(userRef);
+        if (userDoc.exists()) {
+            const userData = userDoc.data();
+            let folders = userData.folders || [];
+
+            folders = folders.map(folder => folder === oldName ? newName : folder);
+
+            await updateDoc(userRef, { folders });
+        }
+
+        toast.success(`Folder renamed from "${oldName}" to "${newName}" successfully!`);
+    } catch (error) {
+        console.error("Failed to update folder name:", error);
+        toast.error(`Error updating folder name: ${error.message}`);
+    }
 };

@@ -10,7 +10,7 @@ import { VscChecklist } from "react-icons/vsc";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import { createFolder, fetchFoldersRealtime, TodoContextData } from "../context/TodoContext";
+import { createFolder, deleteFolder, fetchFoldersRealtime, TodoContextData, updateFolderName } from "../context/TodoContext";
 import { GoCheckCircleFill } from "react-icons/go";
 
 export default function CreateFolder() {
@@ -58,8 +58,8 @@ export default function CreateFolder() {
 
     const handleCreateFolder = async () => {
         await createFolder(user.uid, inputFolderName);
-        setOpenCreateFolderPopUp(false);
         setInputFolderName("");
+        setOpenCreateFolderPopUp(false);
     };
 
     const toggleFolderSelection = (folderName) => {
@@ -74,9 +74,45 @@ export default function CreateFolder() {
         });
     };
 
-    const handleDeletedFolder = () => {
+    const handleDeletedFolder = async () => {
+        try {
+            await Promise.all(
+                rightClickedFolder.map(async (folderName) => {
+                    await deleteFolder(user.uid, folderName);
+                })
+            );
 
-    }
+            setFolderName(prevFolders => prevFolders.filter(folder => !rightClickedFolder.includes(folder.name)));
+
+            setRightClickedFolder([]);
+            setDeletedPopUpOpen(false);
+            setIsContextMenuOpen(false);
+        } catch (error) {
+            console.error("Error deleting folders:", error);
+        }
+    };
+
+    const handleEditFolder = async () => {
+        if (rightClickedFolder.length === 0 || !inputFolderName.trim()) return;
+
+        const oldFolderName = rightClickedFolder[0];
+        const newFolderName = inputFolderName.trim();
+
+        try {
+            await updateFolderName(user.uid, oldFolderName, newFolderName);
+            setFolderName((prevFolders) =>
+                prevFolders.map(folder =>
+                    folder.name === oldFolderName ? { ...folder, name: newFolderName } : folder
+                )
+            );
+
+            setRightClickedFolder([]);
+            setOpenCreateFolderPopUp(false);
+            setIsContextMenuOpen(false);
+        } catch (error) {
+            console.error("Error updating folder:", error);
+        }
+    };
 
     console.log("selectedFolder", rightClickedFolder)
 
@@ -92,12 +128,12 @@ export default function CreateFolder() {
                             onClick={() => {
                                 const selectableFolders = folderName
                                     .map(folder => folder.name)
-                                    .filter(name => name !== "All" && name !== "Uncategorised"); // Exclude "All" and "Uncategorised"
+                                    .filter(name => name !== "All" && name !== "Uncategorised");
 
                                 if (rightClickedFolder.length === selectableFolders.length) {
-                                    setRightClickedFolder([]); // Deselect all
+                                    setRightClickedFolder([]);
                                 } else {
-                                    setRightClickedFolder(selectableFolders); // Select only valid folders
+                                    setRightClickedFolder(selectableFolders);
                                 }
                             }}
                         />
@@ -111,7 +147,7 @@ export default function CreateFolder() {
                                 return (
                                     <button
                                         key={index}
-                                        className="bg-card rounded-lg flex justify-between items-center px-4 py-3 text-sm"
+                                        className={`${isSelected ? "bg-gray-200 dark:text-black" : "bg-card"} rounded-lg flex justify-between items-center px-4 py-4 text-sm`}
                                         onClick={() => toggleFolderSelection(folder.name)}
                                     >
                                         <div className="flex items-center gap-1">
@@ -137,7 +173,14 @@ export default function CreateFolder() {
                             <AiOutlineDelete className="sm:text-xl text-lg" />
                             <span className="text-xs sm:text-sm">Delete</span>
                         </div>
-                        <div className="flex flex-col items-center cursor-pointer">
+                        <div className="flex flex-col items-center cursor-pointer"
+                            onClick={() => {
+                                if (rightClickedFolder.length > 0) {
+                                    setInputFolderName(rightClickedFolder[0]);
+                                    setOpenCreateFolderPopUp(true);
+                                }
+                            }}>
+
                             <TbEdit className="sm:text-xl text-lg" />
                             <span className="text-xs sm:text-sm">Edit</span>
                         </div>
@@ -167,7 +210,7 @@ export default function CreateFolder() {
                                             color="orange"
                                             className={selectedFolder === folder.name ? "visible" : "invisible"}
                                         />
-                                        <span>{folder.name}</span>
+                                        <span className={selectedFolder === folder.name ? "font-semibold" : "font-normal"}>{folder.name}</span>
                                     </div>
                                     <div className="text-xs">{folder.taskCount}</div>
                                 </button>
@@ -246,7 +289,13 @@ export default function CreateFolder() {
                             <Button variant="secondary" onClick={() => setOpenCreateFolderPopUp(false)}>
                                 Cancel
                             </Button>
-                            <Button variant="blue" onClick={handleCreateFolder}>
+                            <Button variant="blue" onClick={() => {
+                                if (rightClickedFolder.length > 0) {
+                                    handleEditFolder();
+                                } else {
+                                    handleCreateFolder();
+                                }
+                            }}>
                                 OK
                             </Button>
                         </div>

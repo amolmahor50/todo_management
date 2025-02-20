@@ -16,8 +16,6 @@ function Notes() {
         };
     }, [user?.uid]);
 
-    console.log(user)
-
     return (
         <div className='flex flex-col'>
             <SearchNotes />
@@ -27,8 +25,8 @@ function Notes() {
                     <button
                         key={index}
                         onClick={() => setSelectedFolder(folder.name)}
-                        className={`px-3 py-1 rounded-md border text-xs flex items-center gap-1 min-w-fit
-                                ${selectedFolder === folder.name ? "bg-yellow-400" : ""}`}>
+                        className={`px-3 py-1 rounded-md border border-white text-xs flex items-center gap-1 min-w-fit
+                                ${selectedFolder === folder.name ? "bg-yellow-400 dark:text-black border-none" : ""}`}>
                         {folder.name}
                         <span className="text-gray-500 text-xs">({folder.taskCount})</span>
                     </button>
