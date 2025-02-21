@@ -40,6 +40,8 @@ export default function AddTodo() {
 
     // Save Todo Data to Firestore
     const handleSaveTodo = async () => {
+        if (!TodoData.title.trim() || !TodoData.description.trim()) return;
+
         const folderTab = selectedFolder === "All" ? "Uncategorised" : selectedFolder;
         await addTodoData(user.uid, folderTab, TodoData);
         Navigate('/todo-management')

@@ -11,10 +11,13 @@ export const TodoContextProvider = ({ children }) => {
     const [folderName, setFolderName] = useState([]);
     const [Notes, setNotes] = useState([]);
     const [selectedFolder, setSelectedFolder] = useState("All");
+    const [searchQuery, setSearchQuery] = useState("");
 
     return (
         <TodoContextData.Provider value={{
-            user, setUser, folderName, setFolderName, Notes, setNotes, selectedFolder, setSelectedFolder
+            user, setUser, folderName, setFolderName, Notes,
+            setNotes, selectedFolder, setSelectedFolder,
+            searchQuery, setSearchQuery
         }}>
             {children}
         </TodoContextData.Provider>
@@ -174,20 +177,27 @@ export const addTodoData = async (userId, folderName, todoData) => {
     }
 };
 
-export const fetchTodosRealtime = (userId, folderName, setNotes) => {
+export const fetchTodosRealtime = (userId, folderName, setNotes, searchQuery) => {
     const todosRef = collection(db, "users", userId, "todos", folderName, "tasks");
 
-    const unsubscribe = onSnapshot(todosRef, (snapshot) => {
-        const todos = snapshot.docs.map(doc => ({
+    return onSnapshot(todosRef, (snapshot) => {
+        let todos = snapshot.docs.map(doc => ({
             id: doc.id,
             ...doc.data(),
         }));
+
+        // Apply search filter if a query is present
+        if (searchQuery) {
+            todos = todos.filter(todo =>
+                todo.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                todo.description.toLowerCase().includes(searchQuery.toLowerCase())
+            );
+        }
+
         setNotes(todos);
     }, (error) => {
         console.error("Error fetching todos:", error.message);
     });
-
-    return unsubscribe;
 };
 
 // Fetch all tasks across all folders
@@ -315,7 +325,7 @@ export const updateFolderName = async (userId, oldName, newName) => {
     }
 };
 
-export const EditedfetchTodoById = async (userId, folderName, todoId) => {
+export const EditedfetchTodoById = (userId, folderName, todoId, setTodoData) => {
     try {
         if (!userId || !folderName || !todoId) {
             console.error("Invalid parameters: Missing userId, folderName, or todoId.");
@@ -323,14 +333,18 @@ export const EditedfetchTodoById = async (userId, folderName, todoId) => {
         }
 
         const todoRef = doc(db, "users", userId, "todos", folderName, "tasks", todoId);
-        const todoSnap = await getDoc(todoRef);
 
-        if (todoSnap.exists()) {
-            return { id: todoSnap.id, ...todoSnap.data() };
-        } else {
-            console.error("Todo not found!");
-            return null;
-        }
+        // Listen for real-time updates
+        const unsubscribe = onSnapshot(todoRef, (todoSnap) => {
+            if (todoSnap.exists()) {
+                setTodoData({ id: todoSnap.id, ...todoSnap.data() });
+            } else {
+                console.error("Todo not found!");
+                setTodoData(null);
+            }
+        });
+
+        return unsubscribe; // Return the unsubscribe function to stop listening when needed
     } catch (error) {
         console.error("Error fetching todo:", error.message);
         return null;
@@ -341,7 +355,6 @@ export const updateTodoIndb = async (userId, folderName, todoId, updatedData) =>
     try {
         const todoRef = doc(db, "users", userId, "todos", folderName, "tasks", todoId);
         await updateDoc(todoRef, updatedData);
-        console.log("Todo updated successfully!");
         toast.success("Todo updated successfully!");
     } catch (error) {
         console.error("Error updating todo:", error.message);

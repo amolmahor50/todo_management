@@ -30,18 +30,12 @@ export default function EditTodo() {
         date: "",
     });
 
-    // Fetch Todo from Firestore
+    // Fetch Todo from Firestore in real-time
     useEffect(() => {
-        const fetchData = async () => {
-            if (userId && folder && taskId) {
-                const data = await EditedfetchTodoById(userId, folder, taskId);
-                if (data) {
-                    setTodoData(data);
-                }
-            }
-        };
-
-        fetchData();
+        if (userId && folder && taskId) {
+            const unsubscribe = EditedfetchTodoById(userId, folder, taskId, setTodoData);
+            return () => unsubscribe && unsubscribe(); // Cleanup listener on unmount
+        }
     }, [userId, folder, taskId]);
 
     // Handle input change
