@@ -7,6 +7,17 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 import { ChevronsUpDown } from "lucide-react"
 import { MdNavigateNext } from "react-icons/md";
 import { useContext } from "react";
@@ -155,12 +166,43 @@ export default function Settigs() {
                             <div className="text-sm font-medium leading-none flex justify-between items-center">
                                 Privacy <MdNavigateNext />
                             </div>
-                            <div className="text-sm font-medium leading-none text-destructive flex justify-between items-center">
-                                Permanently Deleted Account <MdNavigateNext />
-                            </div>
-                            <div className="text-sm font-medium leading-none text-destructive flex justify-between items-center">
-                                Logout <MdNavigateNext onClick={handleLogout} />
-                            </div>
+
+                            <AlertDialog>
+                                <AlertDialogTrigger className="text-sm font-medium leading-none text-destructive flex justify-between items-center">
+                                    Permanently Deleted Account <MdNavigateNext />
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                            This action cannot be undone. This will permanently delete your account
+                                            and remove your data from our servers.
+                                        </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                        <AlertDialogAction className="bg-blue-600 hover:bg-blue-500">Continue</AlertDialogAction>
+                                    </AlertDialogFooter>
+                                </AlertDialogContent>
+                            </AlertDialog>
+                            <AlertDialog>
+                                <AlertDialogTrigger className="text-sm font-medium leading-none text-destructive flex justify-between items-center">
+                                    Logout <MdNavigateNext />
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                            This action cannot be undone. This will LogOut your account
+                                            from our servers.
+                                        </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                        <AlertDialogAction className="bg-red-600 hover:bg-red-400" onClick={handleLogout}>LogOut</AlertDialogAction>
+                                    </AlertDialogFooter>
+                                </AlertDialogContent>
+                            </AlertDialog>
                         </div>
                     </div>
                 </div>

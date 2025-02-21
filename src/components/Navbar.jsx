@@ -10,7 +10,7 @@ export default function Navbar() {
         <div className="flex justify-between items-center bg-muted px-8 py-4">
             <div></div>
             <div className="text-medium">
-                Notes
+                {location.pathname === "/todo-management" ? "Notes" : "Tasks"}
             </div>
             <div className="flex gap-6 items-center">
                 {location.pathname === "/todo-management" && (

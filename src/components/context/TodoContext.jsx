@@ -2,6 +2,7 @@ import { createContext, useState } from "react";
 import { serverTimestamp, collection, addDoc, onSnapshot, doc, setDoc, getDocs, getDoc, updateDoc, arrayUnion, deleteDoc, arrayRemove } from "firebase/firestore";
 import { db } from "../../lib/firebaseConfig";
 import { toast } from "sonner";
+import { saveUserProfile } from "../Authentication/auth";
 
 export const TodoContextData = createContext();
 
@@ -19,6 +20,42 @@ export const TodoContextProvider = ({ children }) => {
         </TodoContextData.Provider>
     )
 }
+
+// user profile data update
+export const userProfileData = async (user, formData, setUser) => {
+    try {
+        if (!user?.uid) {
+            toast.error("User ID not found. Please log in again.");
+            return;
+        }
+
+        const userRef = doc(db, "users", user.uid);
+
+        await setDoc(userRef, {
+            ProfileData: {
+                email: formData.email,
+                firstName: formData.firstName,
+                lastName: formData.lastName,
+                dateOfBirth: formData.dateOfBirth,
+                mobile: formData.mobile,
+                gender: formData.gender,
+                address: formData.address,
+                photo: formData.photo,
+            }
+        }, { merge: true });
+
+        setUser((prev) => ({ ...prev, ProfileData: formData }));
+        saveUserProfile(user, formData);
+        toast.success("Profile Updated Successfully!", {
+            action: { label: "Close" },
+        });
+    } catch (error) {
+        console.error("Error updating profile:", error);
+        toast.error(`Error updating profile: ${error.message}`, {
+            action: { label: "Close" },
+        });
+    }
+};
 
 // Create a new folder inside a user's collection
 export const createFolder = async (userId, folderName) => {

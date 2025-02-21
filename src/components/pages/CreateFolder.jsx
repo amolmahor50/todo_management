@@ -120,7 +120,13 @@ export default function CreateFolder() {
         <>
             {isContextMenuOpen ? (
                 <>
-                    <div className="flex justify-between items-center">
+                    <motion.div
+                        className="w-full mx-auto max-w-5xl fixed top-0 left-0 right-0 bg-muted z-40 py-4 sm:px-1 px-4 flex justify-between items-center"
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        transition={{ duration: 0.3, ease: "easeOut" }}
+                    >
                         <RxCross2 className="sm:text-2xl text-xl cursor-pointer" onClick={closeContextMenu} />
                         <span>{`${rightClickedFolder.length} item selected`}</span>
                         <VscChecklist
@@ -137,8 +143,8 @@ export default function CreateFolder() {
                                 }
                             }}
                         />
-                    </div>
-                    <div className="grid gap-2 mt-6">
+                    </motion.div>
+                    <div className="grid gap-2 mt-12">
                         {Array.isArray(folderName) &&
                             folderName.map((folder, index) => {
                                 const isSelected = Array.isArray(rightClickedFolder) && rightClickedFolder.includes(folder.name);
@@ -164,27 +170,25 @@ export default function CreateFolder() {
                                 );
                             })}
                     </div>
-                    <div className="max-w-5xl w-[90%] mx-auto absolute bottom-5 flex justify-between items-center sm:px-6 px-3">
+                    <motion.div
+                        className="w-full mx-auto max-w-5xl fixed bottom-0 left-0 right-0 bg-muted z-40 sm:px-6 sm:py-4 px-4 py-2 flex justify-between items-center"
+                        initial={{ y: 50, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        transition={{ duration: 0.3 }}
+                    >
                         <div className="flex flex-col items-center cursor-pointer">
-                            <TiPinOutline className="sm:text-xl text-lg" />
-                            <span className="text-xs sm:text-sm">Pin</span>
+                            <TiPinOutline className="text-lg" />
+                            <span className="text-xs">Pin</span>
                         </div>
                         <div className="flex flex-col items-center cursor-pointer" onClick={() => setDeletedPopUpOpen(true)}>
-                            <AiOutlineDelete className="sm:text-xl text-lg" />
-                            <span className="text-xs sm:text-sm">Delete</span>
+                            <AiOutlineDelete className="text-lg" />
+                            <span className="text-xs">Delete</span>
                         </div>
-                        <div className="flex flex-col items-center cursor-pointer"
-                            onClick={() => {
-                                if (rightClickedFolder.length > 0) {
-                                    setInputFolderName(rightClickedFolder[0]);
-                                    setOpenCreateFolderPopUp(true);
-                                }
-                            }}>
-
-                            <TbEdit className="sm:text-xl text-lg" />
-                            <span className="text-xs sm:text-sm">Edit</span>
+                        <div className="flex flex-col items-center cursor-pointer" onClick={() => setOpenCreateFolderPopUp(true)}>
+                            <TbEdit className="text-lg" />
+                            <span className="text-xs">Edit</span>
                         </div>
-                    </div>
+                    </motion.div>
                 </>
             ) : (
                 <>
@@ -230,14 +234,14 @@ export default function CreateFolder() {
             {/* Pop-up for Creating Folder */}
             {deletedPopUpOpen && (
                 <motion.div
-                    className="fixed inset-0 flex justify-center items-center bg-black bg-opacity-30"
+                    className="fixed inset-0 flex justify-center items-center bg-black bg-opacity-30 z-40"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     onClick={() => setDeletedPopUpOpen(false)}
                 >
                     <motion.div
-                        className="bg-card p-4 text-center grid gap-4 rounded-lg max-w-[450px] w-[90%] mx-auto absolute bottom-5"
+                        className="bg-card p-4 text-center grid gap-4 rounded-lg max-w-[450px] w-[90%] mx-auto absolute bottom-3"
                         initial={{ scale: 0.8, opacity: 0, y: 50 }}
                         animate={{ scale: 1, opacity: 1, y: 0 }}
                         exit={{ scale: 0.8, opacity: 0, y: 50 }}
@@ -261,14 +265,14 @@ export default function CreateFolder() {
             {/* Pop-up for Creating Folder */}
             {openCreateFolderPopUp && (
                 <motion.div
-                    className="fixed inset-0 flex justify-center items-center bg-black bg-opacity-30"
+                    className="fixed inset-0 flex justify-center items-center bg-black bg-opacity-30 z-40"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     onClick={() => setOpenCreateFolderPopUp(false)}
                 >
                     <motion.div
-                        className="bg-card p-4 text-center grid gap-4 rounded-lg max-w-[450px] w-[90%] mx-auto absolute bottom-5"
+                        className="bg-card p-4 text-center grid gap-4 rounded-lg max-w-[450px] w-[90%] mx-auto absolute bottom-3"
                         initial={{ scale: 0.8, opacity: 0, y: 50 }}
                         animate={{ scale: 1, opacity: 1, y: 0 }}
                         exit={{ scale: 0.8, opacity: 0, y: 50 }}
