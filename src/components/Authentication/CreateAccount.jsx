@@ -69,22 +69,13 @@ export function CreateAccount({ className, ...props }) {
         return null;
     };
 
+    // password hide and show toggle
     const handleShow_hide_password1 = (type) => {
-        if (type === "password") {
-            setTypePassword("text");
-        }
-        else if (type === "text") {
-            setTypePassword("password");
-        }
+        type === "password" ? setTypePassword("text") : setTypePassword("password");
     }
 
     const handleShow_hide_password2 = (type) => {
-        if (type === "password") {
-            setConfirmTypePassword("text");
-        }
-        else if (type === "text") {
-            setConfirmTypePassword("password");
-        }
+        type === "password" ? setConfirmTypePassword("text") : setConfirmTypePassword("password");
     }
 
     // Handle form submission
@@ -109,10 +100,12 @@ export function CreateAccount({ className, ...props }) {
 
             // Save firstName and lastName separately in Firestore
             await setDoc(doc(db, "users", user.uid), {
-                uid: user.uid,
-                firstName,
-                lastName,
-                email,
+                ProfileData: {
+                    uid: user.uid,
+                    firstName,
+                    lastName,
+                    email,
+                }
             });
 
             setUser({

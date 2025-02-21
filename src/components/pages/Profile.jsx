@@ -9,39 +9,42 @@ import { GoPencil } from "react-icons/go";
 import { IoIosArrowRoundBack } from "react-icons/io";
 import { useNavigate } from "react-router-dom";
 import { TodoContextData, userProfileData } from "../context/TodoContext";
+import { doc, onSnapshot } from "firebase/firestore";
+import { db } from "../../lib/firebaseConfig";
 
 export default function Profile() {
     const { user, setUser } = useContext(TodoContextData);
     const navigate = useNavigate();
-    const [successMessage, setSuccessMessage] = useState("");
 
     // Form state
+    // State for form inputs & validation errors
     const [formData, setFormData] = useState({
-        firstName: "",
-        lastName: "",
-        email: "",
-        dateOfBirth: "",
-        mobile: "",
-        gender: "",
-        address: "",
-        photo: "",
+        firstName: user?.firstName || "",
+        lastName: user?.lastName || "",
+        email: user?.email,
+        dateOfBirth: user?.dateOfBirth || "",
+        mobile: user?.mobile || "",
+        gender: user?.gender || "",
+        address: user?.address || "",
+        photo: user?.photo || "",
     });
 
     // Sync form data with context when user data changes
     useEffect(() => {
-        if (user) {
-            setFormData({
-                firstName: user?.firstName || "",
-                lastName: user?.lastName || "",
-                email: user?.email || "",
-                dateOfBirth: user?.dateOfBirth || "",
-                mobile: user?.mobile || "",
-                gender: user?.gender || "",
-                address: user?.address || "",
-                photo: user?.photo || "",
+        if (user?.uid) {
+            const userRef = doc(db, "users", user.uid);
+
+            const unsubscribe = onSnapshot(userRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    const newData = docSnap.data()?.ProfileData;
+                    setUser((prev) => ({ ...prev, ProfileData: newData }));
+                    setFormData(newData);
+                }
             });
+
+            return () => unsubscribe();
         }
-    }, [user]);
+    }, [user?.uid]);
 
     // Handle input change
     const handleChange = (e) => {
@@ -76,19 +79,10 @@ export default function Profile() {
     const handleUpdateProfile = async (e) => {
         e.preventDefault();
 
-        // Validate form fields
-        if (!formData.firstName || !formData.lastName || !formData.mobile) {
-            alert("Please fill in all required fields.");
-            return;
-        }
-
         try {
             await userProfileData(user, formData, setUser);
-            setSuccessMessage("Profile updated successfully!");
-            setTimeout(() => setSuccessMessage(""), 3000); // Clear message after 3s
         } catch (error) {
             console.error("Error updating profile:", error);
-            alert("Failed to update profile. Please try again.");
         }
     };
 
@@ -98,8 +92,6 @@ export default function Profile() {
             <div>
                 <span className="sm:text-4xl text-2xl">Profile</span>
             </div>
-
-            {successMessage && <p className="text-green-600 text-center">{successMessage}</p>}
 
             <div>
                 {/* Profile Picture */}
@@ -174,7 +166,7 @@ export default function Profile() {
 
                     <div className="grid gap-2">
                         <Label>Address</Label>
-                        <textarea name="address" placeholder="Address" rows={3} value={formData.address} onChange={handleChange} className="p-3 border-2 rounded-md" />
+                        <textarea name="address" placeholder="Address" rows={3} value={formData.address} onChange={handleChange} className="p-3 border-2 rounded-md focus:outline-none" />
                     </div>
 
                     <div className="flex justify-end">

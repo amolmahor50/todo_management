@@ -11,15 +11,21 @@ import { FaGithub } from "react-icons/fa";
 import { TodoContextData } from "../context/TodoContext";
 import { toast } from "sonner";
 import { getUser, loginWithGoogle, loginWithEmail, loginWithFacebook } from "./auth";
+import { IoEyeOffOutline, IoEyeOutline } from "react-icons/io5";
 
 export function LoginForm({ className, ...props }) {
   const { setUser } = useContext(TodoContextData);
+  const [typePassword, setTypePassword] = useState("password");
   const [loginData, setLoginData] = useState({
     email: "",
     password: "",
   });
 
   const navigate = useNavigate();
+
+  const handleShow_hide_password = (type) => {
+    type === "password" ? setTypePassword("text") : setTypePassword("password");
+  }
 
   // Handle Email and Password login
   const handleEmailWithLogin = async (e) => {
@@ -117,17 +123,26 @@ export function LoginForm({ className, ...props }) {
                         Forgot your password?
                       </Link>
                     </div>
-                    <Input
-                      id="password"
-                      name="password"
-                      type="password"
-                      placeholder="Password"
-                      value={loginData.password}
-                      onChange={(e) =>
-                        setLoginData((prev) => ({ ...prev, password: e.target.value }))
-                      }
-                      required
-                    />
+                    <div className="relative flex items-center">
+                      <Input
+                        id="password"
+                        name="password"
+                        type={typePassword}
+                        placeholder="Password"
+                        value={loginData.password}
+                        onChange={(e) =>
+                          setLoginData((prev) => ({ ...prev, password: e.target.value }))
+                        }
+                        required
+                      />
+                      <span className="absolute right-4 cursor-pointer">
+                        {
+                          typePassword === "password" ?
+                            <IoEyeOutline size={20} onClick={() => handleShow_hide_password("password")} />
+                            : <IoEyeOffOutline size={20} onClick={() => handleShow_hide_password("text")} />
+                        }
+                      </span>
+                    </div>
                   </div>
                   <Button variant="orange" type="submit" className="w-full">
                     Login

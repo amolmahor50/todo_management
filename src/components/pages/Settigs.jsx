@@ -1,6 +1,7 @@
 import { IoIosArrowRoundBack } from "react-icons/io";
 import { Link, useNavigate } from "react-router-dom";
 import { Switch } from "@/components/ui/switch"
+import { Button } from "@/components/ui/button"
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -18,25 +19,103 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { ChevronsUpDown } from "lucide-react"
 import { MdNavigateNext } from "react-icons/md";
-import { useContext } from "react";
+import { useContext, useState } from "react";
 import { TodoContextData } from "../context/TodoContext";
 import { logout } from '../Authentication/auth'
 import { useTheme } from "@/components/theme-provider"
 import { useFontSize } from "../context/FontSizeContext";
+import { deleteUser, EmailAuthProvider, GoogleAuthProvider, reauthenticateWithCredential, reauthenticateWithPopup } from "firebase/auth";
+import { auth, db } from "../../lib/firebaseConfig";
+import { toast } from "sonner";
+import { deleteDoc, doc } from "firebase/firestore";
+import { IoEyeOffOutline, IoEyeOutline } from "react-icons/io5";
 
 export default function Settigs() {
     const { setUser } = useContext(TodoContextData);
     const Navigate = useNavigate();
     const { setTheme, theme } = useTheme();
     const { fontSize, setFontSize } = useFontSize();
+    const [password, setPassword] = useState("");
+    const [typePassword, setTypePassword] = useState("password");
 
     const handleLogout = async () => {
         await logout();
         setUser(null);
         Navigate("/")
     };
+
+    const handleShow_hide_password = (type) => {
+        type === "password" ? setTypePassword("text") : setTypePassword("password");
+    }
+
+    const user = auth.currentUser;
+
+    // parmanently deletd account and deletd data all for user and navigate the login page
+    const handleDeletedAccount = async () => {
+
+        try {
+            // Step 1: Re-authenticate the user
+            if (user.providerData[0].providerId === "password") {
+                // If user signed in with email & password, ask for password
+                if (!password) {
+                    toast.error("Password is required for authentication.", {
+                        action: {
+                            label: "Close",
+                        },
+                    });
+                    return;
+                }
+
+                const credential = EmailAuthProvider.credential(user.email, password);
+                await reauthenticateWithCredential(user, credential);
+            } else {
+                // If user signed in with Google, use popup re-authentication
+                const provider = new GoogleAuthProvider();
+                await reauthenticateWithPopup(user, provider);
+            }
+
+            // Step 2: Delete from Firestore
+            await deleteDoc(doc(db, "users", user.uid));
+
+            // Step 3: Delete user from Firebase Authentication
+            await deleteUser(user);
+
+            // Step 4: Clear local data
+            localStorage.removeItem("userTodo");
+            localStorage.removeItem("savedEmail");
+
+            // navigate to the login page and log out account 
+            await logout();
+            setUser(null);
+            Navigate("/")
+
+            toast.success("Your account has been permanently deleted!", {
+                action: {
+                    label: "Close",
+                },
+            });
+        } catch (error) {
+            console.error("Error deleting user:", error);
+            toast.error(`Password Wrong please put the correct password`, {
+                action: {
+                    label: "Close",
+                },
+            });
+        }
+    }
 
     return (
         <>
@@ -163,29 +242,81 @@ export default function Settigs() {
                             Others
                         </p>
                         <div className="grid gap-4 mt-1 bg-card rounded-lg px-2 py-4 sm:px-4 sm:py-6 cursor-pointer">
-                            <div className="text-sm font-medium leading-none flex justify-between items-center">
+                            <Link to='https://privacy.mi.com/all/en_IN' className="text-sm font-medium leading-none flex justify-between items-center">
                                 Privacy <MdNavigateNext />
-                            </div>
-
-                            <AlertDialog>
-                                <AlertDialogTrigger className="text-sm font-medium leading-none text-destructive flex justify-between items-center">
-                                    Permanently Deleted Account <MdNavigateNext />
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                    <AlertDialogHeader>
-                                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                                        <AlertDialogDescription>
-                                            This action cannot be undone. This will permanently delete your account
-                                            and remove your data from our servers.
-                                        </AlertDialogDescription>
-                                    </AlertDialogHeader>
-                                    <AlertDialogFooter>
-                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                        <AlertDialogAction className="bg-blue-600 hover:bg-blue-500">Continue</AlertDialogAction>
-                                    </AlertDialogFooter>
-                                </AlertDialogContent>
-                            </AlertDialog>
-                            <AlertDialog>
+                            </Link>
+                            {user && user.providerData.length > 0 ? (
+                                user.providerData[0].providerId !== "password" ? (
+                                    <AlertDialog>
+                                        <AlertDialogTrigger className="text-sm font-medium leading-none text-destructive flex justify-between items-center">
+                                            Permanently Deleted Account <MdNavigateNext />
+                                        </AlertDialogTrigger>
+                                        <AlertDialogContent>
+                                            <AlertDialogHeader>
+                                                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                                <AlertDialogDescription>
+                                                    This action cannot be undone. This will permanently delete your account
+                                                    and remove your data from our servers.
+                                                </AlertDialogDescription>
+                                            </AlertDialogHeader>
+                                            <AlertDialogFooter>
+                                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                <AlertDialogAction
+                                                    className="bg-blue-600 hover:bg-blue-500"
+                                                    onClick={handleDeletedAccount}
+                                                >
+                                                    Delete Account
+                                                </AlertDialogAction>
+                                            </AlertDialogFooter>
+                                        </AlertDialogContent>
+                                    </AlertDialog>
+                                ) : (
+                                    <Dialog>
+                                        <DialogTrigger asChild>
+                                            <Button variant="outline" className="text-sm font-medium leading-none text-destructive flex justify-between items-center border-none p-0 w-full">
+                                                Permanently Delete Account <MdNavigateNext />
+                                            </Button>
+                                        </DialogTrigger>
+                                        <DialogContent className="sm:max-w-[425px]">
+                                            <DialogHeader>
+                                                <DialogTitle>Confirm Deletion</DialogTitle>
+                                                <DialogDescription>
+                                                    Enter your password to confirm account deletion:
+                                                </DialogDescription>
+                                            </DialogHeader>
+                                            <div className="grid gap-4 py-4">
+                                                <div>
+                                                    <Label htmlFor="password">Password</Label>
+                                                    <div className="relative flex items-center">
+                                                        <Input
+                                                            id="password"
+                                                            type={typePassword}
+                                                            value={password}
+                                                            onChange={(e) => setPassword(e.target.value)}
+                                                            placeholder="Enter your correct password"
+                                                        />
+                                                        <span className="absolute right-4 cursor-pointer">
+                                                            {
+                                                                typePassword === "password" ?
+                                                                    <IoEyeOutline size={20} onClick={() => handleShow_hide_password("password")} />
+                                                                    : <IoEyeOffOutline size={20} onClick={() => handleShow_hide_password("text")} />
+                                                            }
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <DialogFooter>
+                                                <Button type="button" variant="blue" onClick={handleDeletedAccount}>
+                                                    Delete Account
+                                                </Button>
+                                            </DialogFooter>
+                                        </DialogContent>
+                                    </Dialog>
+                                )
+                            ) : (<></>
+                            )
+                            }
+                            <AlertDialog AlertDialog >
                                 <AlertDialogTrigger className="text-sm font-medium leading-none text-destructive flex justify-between items-center">
                                     Logout <MdNavigateNext />
                                 </AlertDialogTrigger>
@@ -206,7 +337,7 @@ export default function Settigs() {
                         </div>
                     </div>
                 </div>
-            </div>
+            </div >
         </>
     )
 }
