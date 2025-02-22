@@ -3,9 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { IoReturnUpBackOutline, IoReturnUpForwardOutline, IoCheckmarkOutline } from "react-icons/io5";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { useState } from "react";
+import { useState, useContext } from "react";
 import { addTodoData, TodoContextData } from "../context/TodoContext";
-import { useContext } from "react";
 
 export default function AddTodo() {
     const { user, selectedFolder } = useContext(TodoContextData);
@@ -24,10 +23,12 @@ export default function AddTodo() {
         return `${day} ${month} ${formattedHours}:${formattedMinutes} ${ampm}`;
     };
 
+    // Initialize Todo Data with default pinned as false
     const [TodoData, setTodoData] = useState({
         title: "",
         description: "",
         date: formatDate(),
+        pinned: false,
     });
 
     const handleInputChange = (e) => {
@@ -43,8 +44,11 @@ export default function AddTodo() {
         if (!TodoData.title.trim() || !TodoData.description.trim()) return;
 
         const folderTab = selectedFolder === "All" ? "Uncategorised" : selectedFolder;
-        await addTodoData(user.uid, folderTab, TodoData);
-        Navigate('/todo-management')
+
+        // Ensure pinned is always set to false
+        await addTodoData(user.uid, folderTab, { ...TodoData, pinned: false });
+
+        Navigate('/todo-management');
     };
 
     return (

@@ -1,5 +1,5 @@
 import { createContext, useState } from "react";
-import { serverTimestamp, collection, addDoc, onSnapshot, doc, setDoc, getDocs, getDoc, updateDoc, arrayUnion, deleteDoc, arrayRemove } from "firebase/firestore";
+import { serverTimestamp, collection, addDoc, onSnapshot, doc, setDoc, getDocs, getDoc, updateDoc, deleteDoc, arrayRemove } from "firebase/firestore";
 import { db } from "../../lib/firebaseConfig";
 import { toast } from "sonner";
 import { saveUserProfile } from "../Authentication/auth";
@@ -12,12 +12,13 @@ export const TodoContextProvider = ({ children }) => {
     const [Notes, setNotes] = useState([]);
     const [selectedFolder, setSelectedFolder] = useState("All");
     const [searchQuery, setSearchQuery] = useState("");
+    const [isContextMenuOpenForTodos, setIsContextMenuOpenForTodos] = useState(false);
 
     return (
         <TodoContextData.Provider value={{
             user, setUser, folderName, setFolderName, Notes,
             setNotes, selectedFolder, setSelectedFolder,
-            searchQuery, setSearchQuery
+            searchQuery, setSearchQuery, isContextMenuOpenForTodos, setIsContextMenuOpenForTodos
         }}>
             {children}
         </TodoContextData.Provider>
@@ -204,98 +205,6 @@ export const toggleFolderPinned = async (userId, folderName, currentPinned) => {
     }
 };
 
-// add todo in which folder are selected in this added 
-export const addTodoData = async (userId, folderName, todoData) => {
-    try {
-        const todoRef = collection(db, "users", userId, "todos", folderName, "tasks");
-
-        await addDoc(todoRef, {
-            title: todoData.title,
-            description: todoData.description,
-            date: todoData.date,
-            createdAt: serverTimestamp(),
-        });
-
-        toast.success(`Todo saved in folder: ${folderName}`);
-    } catch (error) {
-        console.error("Error saving todo:", error.message);
-        toast.error(`Error saving todo: ${error.message}`);
-    }
-};
-
-export const fetchTodosRealtime = (userId, folderName, setNotes, searchQuery) => {
-    const todosRef = collection(db, "users", userId, "todos", folderName, "tasks");
-
-    return onSnapshot(todosRef, (snapshot) => {
-        let todos = snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data(),
-        }));
-
-        // Apply search filter if a query is present
-        if (searchQuery) {
-            todos = todos.filter(todo =>
-                todo.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                todo.description.toLowerCase().includes(searchQuery.toLowerCase())
-            );
-        }
-
-        setNotes(todos);
-    }, (error) => {
-        console.error("Error fetching todos:", error.message);
-    });
-};
-
-// Fetch all tasks across all folders
-export const fetchAllFoldersTasks = (userId, setNotes) => {
-    if (!userId) return;
-
-    const foldersRef = collection(db, "users", userId, "todos");
-
-    return onSnapshot(foldersRef, async (foldersSnapshot) => {
-        let allTasks = [];
-        let folderListeners = [];
-
-        const fetchTasks = async (folderId) => {
-            const tasksRef = collection(db, "users", userId, "todos", folderId, "tasks");
-            return onSnapshot(tasksRef, (tasksSnapshot) => {
-                const tasks = tasksSnapshot.docs.map(doc => ({
-                    id: doc.id,
-                    folder: folderId,
-                    ...doc.data(),
-                }));
-
-                allTasks = [...allTasks, ...tasks];
-                setNotes([...allTasks]);
-            });
-        };
-
-        // Fetch tasks from all user-defined folders
-        foldersSnapshot.docs.forEach(folderDoc => {
-            folderListeners.push(fetchTasks(folderDoc.id));
-        });
-
-        // Fetch tasks from "Uncategorised" folder explicitly
-        const uncategorisedRef = collection(db, "users", userId, "todos", "Uncategorised", "tasks");
-        folderListeners.push(
-            onSnapshot(uncategorisedRef, (tasksSnapshot) => {
-                const uncategorisedTasks = tasksSnapshot.docs.map(doc => ({
-                    id: doc.id,
-                    folder: "Uncategorised",
-                    ...doc.data(),
-                }));
-
-                allTasks = [...allTasks, ...uncategorisedTasks];
-                setNotes([...allTasks]);
-            })
-        );
-
-        return () => {
-            folderListeners.forEach(unsub => unsub());
-        };
-    });
-};
-
 export const deleteFolder = async (userId, folderId) => {
     try {
         // Step 1: Delete all tasks inside the folder
@@ -369,6 +278,144 @@ export const updateFolderName = async (userId, oldName, newName) => {
         console.error("Failed to update folder name:", error);
         toast.error(`Error updating folder name: ${error.message}`);
     }
+};
+
+// add todo in which folder are selected in this added 
+export const addTodoData = async (userId, folderName, todoData) => {
+    try {
+        if (!userId || !folderName || !todoData.title) {
+            throw new Error("Missing required fields");
+        }
+
+        const todoRef = collection(db, "users", userId, "todos", folderName, "tasks");
+
+        await addDoc(todoRef, {
+            title: todoData.title,
+            description: todoData.description || "",
+            date: todoData.date || null,
+            pinned: todoData.pinned || false,  // Default to false unless explicitly set
+            createdAt: serverTimestamp(),
+        });
+
+        toast.success(`Todo saved in folder: ${folderName}`);
+    } catch (error) {
+        console.error("Error saving todo:", error.message);
+        toast.error(`Error saving todo: ${error.message}`);
+    }
+};
+
+export const fetchTodosRealtime = (userId, folderName, setNotes, searchQuery) => {
+    const todosRef = collection(db, "users", userId, "todos", folderName, "tasks");
+
+    return onSnapshot(todosRef, (snapshot) => {
+        let todos = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data(),
+        }));
+
+        // Apply search filter if a query is present
+        if (searchQuery) {
+            todos = todos.filter(todo =>
+                todo.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                todo.description.toLowerCase().includes(searchQuery.toLowerCase())
+            );
+        }
+
+        todos.sort((a, b) => {
+            if (a.pinned === b.pinned) {
+                return b.createdAt - a.createdAt; // Newer tasks first
+            }
+            return b.pinned - a.pinned; // Pinned tasks first
+        });
+
+        setNotes(todos);
+    }, (error) => {
+        console.error("Error fetching todos:", error.message);
+    });
+};
+
+export const togglePinStatusForTodo = async (userId, folderName, todoId, currentStatus) => {
+    try {
+        if (!userId || !folderName || !todoId) {
+            console.error("Missing required fields");
+            return;
+        }
+
+        const todoRef = doc(db, "users", userId, "todos", folderName, "tasks", todoId);
+        await updateDoc(todoRef, { pinned: !currentStatus });
+
+        console.log(`Todo ${todoId} pin status updated to ${!currentStatus}`);
+    } catch (error) {
+        console.error("Error toggling pin status:", error.message);
+    }
+};
+
+// Fetch all tasks across all folders
+export const fetchAllFoldersTasks = (userId, setNotes) => {
+    if (!userId) return;
+
+    const foldersRef = collection(db, "users", userId, "todos");
+
+    return onSnapshot(foldersRef, async (foldersSnapshot) => {
+        let allTasks = [];
+        let folderListeners = [];
+
+        const fetchTasks = async (folderId) => {
+            const tasksRef = collection(db, "users", userId, "todos", folderId, "tasks");
+            return onSnapshot(tasksRef, (tasksSnapshot) => {
+                const tasks = tasksSnapshot.docs.map(doc => ({
+                    id: doc.id,
+                    folder: folderId,
+                    ...doc.data(),
+                }));
+
+                allTasks = [...allTasks, ...tasks];
+
+                // Sort tasks: pinned first, then by date (newest first)
+                const sortedTasks = allTasks.sort((a, b) => {
+                    if (a.pinned === b.pinned) {
+                        return new Date(b.createdAt) - new Date(a.createdAt);
+                    }
+                    return b.pinned - a.pinned;
+                });
+
+                setNotes([...sortedTasks]);
+            });
+        };
+
+        // Fetch tasks from all user-defined folders
+        foldersSnapshot.docs.forEach(folderDoc => {
+            folderListeners.push(fetchTasks(folderDoc.id));
+        });
+
+        // Fetch tasks from "Uncategorised" folder explicitly
+        const uncategorisedRef = collection(db, "users", userId, "todos", "Uncategorised", "tasks");
+        folderListeners.push(
+            onSnapshot(uncategorisedRef, (tasksSnapshot) => {
+                const uncategorisedTasks = tasksSnapshot.docs.map(doc => ({
+                    id: doc.id,
+                    folder: "Uncategorised",
+                    ...doc.data(),
+                }));
+
+                allTasks = [...allTasks, ...uncategorisedTasks];
+
+                // Sort tasks: pinned first, then by date (newest first)
+                const sortedTasks = allTasks.sort((a, b) => {
+                    if (a.pinned === b.pinned) {
+                        return new Date(b.createdAt) - new Date(a.createdAt);
+                    }
+                    return b.pinned - a.pinned;
+                });
+
+                setNotes([...sortedTasks]);
+            })
+        );
+
+        return () => {
+            folderListeners.forEach(unsub => unsub());
+        };
+    });
 };
 
 export const EditedfetchTodoById = (userId, folderName, todoId, setTodoData) => {
