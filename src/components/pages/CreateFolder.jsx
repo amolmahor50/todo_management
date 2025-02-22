@@ -216,7 +216,10 @@ export default function CreateFolder() {
                                         />
                                         <span className={selectedFolder === folder.name ? "font-semibold" : "font-normal"}>{folder.name}</span>
                                     </div>
-                                    <div className="text-xs">{folder.taskCount}</div>
+                                    <div className="flex items-center gap-2">
+                                        {false ? <TiPinOutline className="text-sm text-yellow-400" /> : ""}
+                                        <div className="text-xs">{folder.taskCount}</div>
+                                    </div>
                                 </button>
                             ))}
                     </div>
