@@ -61,7 +61,7 @@ export const userProfileData = async (user, formData, setUser) => {
 };
 
 // Create a new folder inside a user's collection
-export const createFolder = async (userId, folderName) => {
+export const createFolder = async (userId, folderName, pinned = false) => {
     try {
         if (!userId || !folderName) {
             toast.error("Invalid user ID or folder name.");
@@ -78,22 +78,35 @@ export const createFolder = async (userId, folderName) => {
             existingFolders = userDoc.data().folders || [];
 
             // Check if the folder name already exists (case insensitive)
-            const isFolderExists = existingFolders.some(folder => folder.toLowerCase() === folderName.toLowerCase());
+            const isFolderExists = existingFolders.some(folder =>
+                folder.name.toLowerCase() === folderName.toLowerCase()
+            );
 
             if (isFolderExists) {
                 toast.error(`Folder "${folderName}" already exists!`);
                 return;
             }
         } else {
-            // If the user doc does not exist, create it with default folders
-            await setDoc(userRef, { folders: ["All", "Uncategorised", folderName] });
+            // If user doc does not exist, create it with default folders
+            await setDoc(userRef, {
+                folders: [
+                    { name: "All", pinned: false },
+                    { name: "Uncategorised", pinned: false },
+                    { name: folderName, pinned }
+                ]
+            });
             toast.success(`Folder "${folderName}" created successfully!`);
             return;
         }
 
         // Ensure "All" is first and "Uncategorised" is last
-        existingFolders = existingFolders.filter(folder => folder !== "All" && folder !== "Uncategorised");
-        existingFolders = ["All", ...existingFolders, folderName, "Uncategorised"];
+        existingFolders = existingFolders.filter(folder => folder.name !== "All" && folder.name !== "Uncategorised");
+        existingFolders = [
+            { name: "All", pinned: false },
+            ...existingFolders,
+            { name: folderName, pinned },
+            { name: "Uncategorised", pinned: false }
+        ];
 
         await updateDoc(userRef, { folders: existingFolders });
 
@@ -102,7 +115,7 @@ export const createFolder = async (userId, folderName) => {
         const folderDoc = await getDoc(folderRef);
 
         if (!folderDoc.exists()) {
-            await setDoc(folderRef, {}); // Create the folder document
+            await setDoc(folderRef, { pinned });
         }
 
         toast.success(`Folder "${folderName}" created successfully!`);
@@ -124,25 +137,37 @@ export const fetchFoldersRealtime = (userId, setFolderName) => {
             let folders = data.folders || [];
 
             // Ensure "All" is at the beginning and "Uncategorised" is at the end
-            folders = folders.filter(folder => folder !== "All" && folder !== "Uncategorised");
-            folders.unshift("All");
-            folders.push("Uncategorised");
+            folders = folders.filter(folder => folder.name !== "All" && folder.name !== "Uncategorised");
+            folders.unshift({ name: "All", pinned: false });
+            folders.push({ name: "Uncategorised", pinned: false });
 
             let folderData = [];
             let totalTasks = 0; // To store total task count
 
             for (const folder of folders) {
-                const tasksRef = collection(db, "users", userId, "todos", folder, "tasks");
+                const tasksRef = collection(db, "users", userId, "todos", folder.name, "tasks");
                 const tasksSnapshot = await getDocs(tasksRef);
 
                 let taskCount = tasksSnapshot.size;
                 totalTasks += taskCount; // Add count to totalTasks
 
                 folderData.push({
-                    name: folder,
+                    name: folder.name,
+                    pinned: folder.pinned || false,
                     taskCount: taskCount,
                 });
             }
+
+            // Sort folders: "All" first, then pinned, then others, then "Uncategorised" last
+            folderData.sort((a, b) => {
+                if (a.name === "All") return -1;
+                if (b.name === "All") return 1;
+                if (a.pinned && !b.pinned) return -1; // Pinned folders should come first
+                if (!a.pinned && b.pinned) return 1;
+                if (a.name === "Uncategorised") return 1;
+                if (b.name === "Uncategorised") return -1;
+                return 0;
+            });
 
             // Update "All" folder to show the total task count
             folderData = folderData.map(folder =>
@@ -151,11 +176,32 @@ export const fetchFoldersRealtime = (userId, setFolderName) => {
 
             setFolderName(folderData);
         } else {
-            setFolderName([{ name: "All", taskCount: 0 }, { name: "Uncategorised", taskCount: 0 }]);
+            setFolderName([{ name: "All", pinned: false, taskCount: 0 }, { name: "Uncategorised", pinned: false, taskCount: 0 }]);
         }
     }, (error) => {
         console.error("Error fetching folders:", error.message);
     });
+};
+
+// Toggle pinned status for a folder
+export const toggleFolderPinned = async (userId, folderName, currentPinned) => {
+    try {
+        const userRef = doc(db, "users", userId);
+        const userDoc = await getDoc(userRef);
+
+        if (!userDoc.exists()) return;
+
+        let folders = userDoc.data().folders || [];
+        folders = folders.map(folder =>
+            folder.name === folderName ? { ...folder, pinned: !currentPinned } : folder
+        );
+
+        await updateDoc(userRef, { folders });
+
+        toast.success(`Folder "${folderName}" pinned status updated!`);
+    } catch (error) {
+        toast.error(`Error updating pinned status: ${error.message}`);
+    }
 };
 
 // add todo in which folder are selected in this added 

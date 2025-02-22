@@ -10,7 +10,7 @@ import { VscChecklist } from "react-icons/vsc";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import { createFolder, deleteFolder, fetchFoldersRealtime, TodoContextData, updateFolderName } from "../context/TodoContext";
+import { createFolder, deleteFolder, fetchFoldersRealtime, TodoContextData, toggleFolderPinned, updateFolderName } from "../context/TodoContext";
 import { GoCheckCircleFill } from "react-icons/go";
 
 export default function CreateFolder() {
@@ -176,15 +176,30 @@ export default function CreateFolder() {
                         animate={{ y: 0, opacity: 1 }}
                         transition={{ duration: 0.3 }}
                     >
-                        <div className="flex flex-col items-center cursor-pointer">
+                        <div className="flex flex-col items-center cursor-pointer"
+                            onClick={() => {
+                                if (rightClickedFolder.length === 1) {
+                                    const folderToPin = folderName.find(folder => folder.name === rightClickedFolder[0]);
+                                    if (folderToPin) {
+                                        toggleFolderPinned(user.uid, folderToPin.name, folderToPin.pinned);
+                                        setIsContextMenuOpen(false);
+                                    }
+                                }
+                            }}>
                             <TiPinOutline className="text-lg" />
                             <span className="text-xs">Pin</span>
                         </div>
-                        <div className="flex flex-col items-center cursor-pointer" onClick={() => setDeletedPopUpOpen(true)}>
+                        <div className="flex flex-col items-center cursor-pointer"
+                            onClick={() => setDeletedPopUpOpen(true)}>
                             <AiOutlineDelete className="text-lg" />
                             <span className="text-xs">Delete</span>
                         </div>
-                        <div className="flex flex-col items-center cursor-pointer" onClick={() => setOpenCreateFolderPopUp(true)}>
+                        <div className="flex flex-col items-center cursor-pointer"
+                            onClick={() => {
+                                setOpenCreateFolderPopUp(true);
+                                setInputFolderName(rightClickedFolder[0]); // Setting the value
+                            }}
+                        >
                             <TbEdit className="text-lg" />
                             <span className="text-xs">Edit</span>
                         </div>
@@ -217,8 +232,8 @@ export default function CreateFolder() {
                                         <span className={selectedFolder === folder.name ? "font-semibold" : "font-normal"}>{folder.name}</span>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        {false ? <TiPinOutline className="text-sm text-yellow-400" /> : ""}
-                                        <div className="text-xs">{folder.taskCount}</div>
+                                        {folder.pinned ? <TiPinOutline className="text-sm sm:text-lg text-yellow-600" /> : ""}
+                                        <div className="text-xs sm:text-sm">{folder.taskCount}</div>
                                     </div>
                                 </button>
                             ))}
@@ -232,83 +247,88 @@ export default function CreateFolder() {
                         </div>
                     </div>
                 </>
-            )}
+            )
+            }
 
             {/* Pop-up for Creating Folder */}
-            {deletedPopUpOpen && (
-                <motion.div
-                    className="fixed inset-0 flex justify-center items-center bg-black bg-opacity-30 z-40"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    onClick={() => setDeletedPopUpOpen(false)}
-                >
+            {
+                deletedPopUpOpen && (
                     <motion.div
-                        className="bg-card p-4 text-center grid gap-4 rounded-lg max-w-[450px] w-[90%] mx-auto absolute bottom-3"
-                        initial={{ scale: 0.8, opacity: 0, y: 50 }}
-                        animate={{ scale: 1, opacity: 1, y: 0 }}
-                        exit={{ scale: 0.8, opacity: 0, y: 50 }}
-                        transition={{ duration: 0.3, ease: "easeOut" }}
-                        onClick={(e) => e.stopPropagation()}
+                        className="fixed inset-0 flex justify-center items-center bg-black bg-opacity-30 z-40"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={() => setDeletedPopUpOpen(false)}
                     >
-                        <h3>Delete Folder</h3>
-                        <p className="text-sm text-muted-foreground">{`Delete ${rightClickedFolder.length} item?`}</p>
-                        <div className="grid grid-cols-2 gap-6">
-                            <Button variant="secondary" onClick={() => setDeletedPopUpOpen(false)}>
-                                Cancel
-                            </Button>
-                            <Button variant="blue" onClick={handleDeletedFolder}>
-                                OK
-                            </Button>
-                        </div>
+                        <motion.div
+                            className="bg-card p-4 text-center grid gap-4 rounded-lg max-w-[450px] w-[90%] mx-auto absolute bottom-3"
+                            initial={{ scale: 0.8, opacity: 0, y: 50 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.8, opacity: 0, y: 50 }}
+                            transition={{ duration: 0.3, ease: "easeOut" }}
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <h3>Delete Folder</h3>
+                            <p className="text-sm text-muted-foreground">{`Delete ${rightClickedFolder.length} item?`}</p>
+                            <div className="grid grid-cols-2 gap-6">
+                                <Button variant="secondary" onClick={() => setDeletedPopUpOpen(false)}>
+                                    Cancel
+                                </Button>
+                                <Button variant="blue" onClick={handleDeletedFolder}>
+                                    OK
+                                </Button>
+                            </div>
+                        </motion.div>
                     </motion.div>
-                </motion.div>
-            )}
+                )
+            }
 
             {/* Pop-up for Creating Folder */}
-            {openCreateFolderPopUp && (
-                <motion.div
-                    className="fixed inset-0 flex justify-center items-center bg-black bg-opacity-30 z-40"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    onClick={() => setOpenCreateFolderPopUp(false)}
-                >
+            {
+                openCreateFolderPopUp && (
                     <motion.div
-                        className="bg-card p-4 text-center grid gap-4 rounded-lg max-w-[450px] w-[90%] mx-auto absolute bottom-3"
-                        initial={{ scale: 0.8, opacity: 0, y: 50 }}
-                        animate={{ scale: 1, opacity: 1, y: 0 }}
-                        exit={{ scale: 0.8, opacity: 0, y: 50 }}
-                        transition={{ duration: 0.3, ease: "easeOut" }}
-                        onClick={(e) => e.stopPropagation()}
+                        className="fixed inset-0 flex justify-center items-center bg-black bg-opacity-30 z-40"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={() => setOpenCreateFolderPopUp(false)}
                     >
-                        <h3>New Folder</h3>
-                        <Input
-                            id="text"
-                            name="text"
-                            type="text"
-                            value={inputFolderName}
-                            onChange={(e) => setInputFolderName(e.target.value)}
-                            placeholder="Unnamed folder"
-                            className="border-2 focus:border-yellow-500"
-                        />
-                        <div className="grid grid-cols-2 gap-6">
-                            <Button variant="secondary" onClick={() => setOpenCreateFolderPopUp(false)}>
-                                Cancel
-                            </Button>
-                            <Button variant="blue" onClick={() => {
-                                if (rightClickedFolder.length > 0) {
-                                    handleEditFolder();
-                                } else {
-                                    handleCreateFolder();
-                                }
-                            }}>
-                                OK
-                            </Button>
-                        </div>
+                        <motion.div
+                            className="bg-card p-4 text-center grid gap-4 rounded-lg max-w-[450px] w-[90%] mx-auto absolute bottom-3"
+                            initial={{ scale: 0.8, opacity: 0, y: 50 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.8, opacity: 0, y: 50 }}
+                            transition={{ duration: 0.3, ease: "easeOut" }}
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <h3>New Folder</h3>
+                            <Input
+                                id="text"
+                                name="text"
+                                type="text"
+                                value={inputFolderName}
+                                onChange={(e) => setInputFolderName(e.target.value)}
+                                placeholder="Unnamed folder"
+                                className="border-2 focus:border-yellow-500"
+                            />
+                            <div className="grid grid-cols-2 gap-6">
+                                <Button variant="secondary" onClick={() => setOpenCreateFolderPopUp(false)}>
+                                    Cancel
+                                </Button>
+                                <Button variant="blue" onClick={() => {
+                                    if (rightClickedFolder.length > 0) {
+                                        handleEditFolder();
+                                    } else {
+                                        handleCreateFolder();
+                                    }
+                                }}>
+                                    OK
+                                </Button>
+                            </div>
+                        </motion.div>
                     </motion.div>
-                </motion.div>
-            )}
+                )
+            }
         </>
     );
 }

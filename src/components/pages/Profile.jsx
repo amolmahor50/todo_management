@@ -16,34 +16,43 @@ export default function Profile() {
     const { user, setUser } = useContext(TodoContextData);
     const navigate = useNavigate();
 
-    // Form state
-    // State for form inputs & validation errors
+    // Ensure formData is always initialized
     const [formData, setFormData] = useState({
-        firstName: user?.firstName || "",
-        lastName: user?.lastName || "",
-        email: user?.email,
-        dateOfBirth: user?.dateOfBirth || "",
-        mobile: user?.mobile || "",
-        gender: user?.gender || "",
-        address: user?.address || "",
-        photo: user?.photo || "",
+        firstName: "",
+        lastName: "",
+        email: "",
+        dateOfBirth: "",
+        mobile: "",
+        gender: "",
+        address: "",
+        photo: "",
     });
 
-    // Sync form data with context when user data changes
+    // Real-time Firestore sync
     useEffect(() => {
-        if (user?.uid) {
-            const userRef = doc(db, "users", user.uid);
+        if (!user?.uid) return;
 
-            const unsubscribe = onSnapshot(userRef, (docSnap) => {
-                if (docSnap.exists()) {
-                    const newData = docSnap.data()?.ProfileData;
-                    setUser((prev) => ({ ...prev, ProfileData: newData }));
-                    setFormData(newData);
-                }
-            });
+        const userRef = doc(db, "users", user.uid);
 
-            return () => unsubscribe();
-        }
+        const unsubscribe = onSnapshot(userRef, (docSnap) => {
+            if (docSnap.exists() && docSnap.data().ProfileData) {
+                const profileData = docSnap.data().ProfileData;
+
+                setUser((prev) => ({ ...prev, ProfileData: profileData }));
+                setFormData({
+                    firstName: profileData.firstName || "",
+                    lastName: profileData.lastName || "",
+                    email: profileData.email || "",
+                    dateOfBirth: profileData.dateOfBirth || "",
+                    mobile: profileData.mobile || "",
+                    gender: profileData.gender || "",
+                    address: profileData.address || "",
+                    photo: profileData.photo || "",
+                });
+            }
+        });
+
+        return () => unsubscribe(); // Cleanup listener on unmount
     }, [user?.uid]);
 
     // Handle input change
