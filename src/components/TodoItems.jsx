@@ -6,7 +6,7 @@ import { VscChecklist } from "react-icons/vsc";
 import { TiPinOutline } from "react-icons/ti";
 import { MdDriveFileMoveOutline } from "react-icons/md";
 import { AiOutlineDelete } from "react-icons/ai";
-import { fetchAllFoldersTasks, fetchTodosRealtime, TodoContextData, togglePinStatusForTodo } from "./context/TodoContext";
+import { deleteMultipleTasks, fetchAllFoldersTasks, fetchTodosRealtime, TodoContextData, togglePinStatusForTodo } from "./context/TodoContext";
 import { GoCheckCircleFill, GoUnlock } from "react-icons/go";
 import { RiCheckboxBlankCircleLine } from "react-icons/ri";
 
@@ -24,27 +24,51 @@ export default function TodoItems() {
     const [selectedTodos, setSelectedTodos] = useState([]);
 
     useEffect(() => {
+        let unsubscribe;
+
         if (selectedFolder === "All") {
             fetchAllFoldersTasks(user.uid, setNotes);
-            return;
+        } else {
+            unsubscribe = fetchTodosRealtime(user.uid, selectedFolder, setNotes, searchQuery);
         }
-        const unsubscribe = fetchTodosRealtime(user.uid, selectedFolder, setNotes, searchQuery);
-        return () => unsubscribe && unsubscribe();
+
+        return () => {
+            if (unsubscribe) {
+                unsubscribe();
+            }
+        };
     }, [user, selectedFolder, searchQuery]);
+
+
+    useEffect(() => {
+        if (selectedTodos.length === 0) {
+            setIsContextMenuOpenForTodos(false);
+        }
+    }, [selectedTodos, setIsContextMenuOpenForTodos]);
+
+    // Search and Sort Together
+    const filteredNotes = Notes
+        .filter((note) => {
+            const query = searchQuery.toLowerCase();
+
+            return (
+                note?.title?.toLowerCase().includes(query) ||
+                note?.description?.toLowerCase().includes(query) ||
+                note?.date?.toLowerCase().includes(query)
+            );
+        })
+        .sort((a, b) => {
+            const aTime = a.createdAt?.seconds || 0;
+            const bTime = b.createdAt?.seconds || 0;
+            if (a.pinned === b.pinned) {
+                return bTime - aTime;
+            }
+            return b.pinned - a.pinned;
+        });
 
     const handleEditTodo = (userId, folder, taskId) => {
         Navigate(`/editTodo/${userId}/${folder}/${taskId}`);
     };
-
-    // Search and Sort Together
-    const filteredNotes = Notes.sort((a, b) => {
-        const aTime = a.createdAt?.seconds || 0;
-        const bTime = b.createdAt?.seconds || 0;
-        if (a.pinned === b.pinned) {
-            return bTime - aTime;
-        }
-        return b.pinned - a.pinned;
-    });
 
     const highlightMatch = (text, query) => {
         if (!query) return text;
@@ -76,26 +100,53 @@ export default function TodoItems() {
         }
     };
 
-    console.log(selectedTodos)
+    const handleTogglePin = async () => {
+        if (!selectedTodos.length) return;
 
-    const handleTogglePin = (Note) => {
-        togglePinStatusForTodo(user.uid, Note.folder, Note.id, Note.pinned);
-
-        setNotes((prevNotes) => {
-            const updatedNotes = prevNotes.map((n) =>
-                n.id === Note.id ? { ...n, pinned: !n.pinned } : n
-            );
-
-            // Ensure sorting is done after updating the pinned state
-            return [...updatedNotes].sort((a, b) => {
-                if (b.pinned !== a.pinned) return b.pinned - a.pinned; // Pinned tasks first
-                return (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0); // Latest first
-            });
+        const selectedTasksByFolder = {};
+        Notes.forEach((note) => {
+            if (selectedTodos.includes(note.id)) {
+                if (!selectedTasksByFolder[note.folder]) {
+                    selectedTasksByFolder[note.folder] = [];
+                }
+                selectedTasksByFolder[note.folder].push(note);
+            }
         });
 
+        // Update pin status for each selected task in Firestore
+        const batchPromises = Object.entries(selectedTasksByFolder).map(async ([folderName, tasks]) => {
+            return Promise.all(tasks.map(async (task) => {
+                await togglePinStatusForTodo(user.uid, folderName, task.id, task.pinned);
+            }));
+        });
+
+        await Promise.all(batchPromises);
+
+        // DO NOT update setNotes manually, Firestore's onSnapshot will handle it
+        setSelectedTodos([]);
         setIsContextMenuOpenForTodos(false);
     };
 
+    const handleDeletedTasks = async () => {
+        if (!selectedTodos.length) return;
+
+        const selectedTasksByFolder = {};
+        Notes.forEach((note) => {
+            if (selectedTodos.includes(note.id)) {
+                if (!selectedTasksByFolder[note.folder]) {
+                    selectedTasksByFolder[note.folder] = [];
+                }
+                selectedTasksByFolder[note.folder].push(note.id);
+            }
+        });
+
+        await deleteMultipleTasks(user.uid, selectedTasksByFolder);
+
+        setNotes(prevNotes => prevNotes.filter(note => !selectedTodos.includes(note.id)));
+
+        setSelectedTodos([]);
+        setIsContextMenuOpenForTodos(false);
+    };
 
     return (
         <>
@@ -116,13 +167,13 @@ export default function TodoItems() {
                                     className="bg-card rounded-lg px-4 py-3 flex flex-col gap-1 cursor-pointer shadow-sm hover:shadow-lg"
                                     initial={{ opacity: 0, y: 10 }}
                                     animate={{ opacity: 1, y: 0 }}
-                                    whileHover={{ scale: 1.02, boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)" }}
+                                    whileHover={{ boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)" }}
                                     transition={{ duration: 0.3 }}
                                 >
-                                    <p className="text-sm font-medium leading-none">
+                                    <p className="text-sm font-medium leading-none truncate">
                                         {highlightMatch(String(Note?.title || "No title"), searchQuery)}
                                     </p>
-                                    <p className="text-sm text-muted-foreground">
+                                    <p className="text-sm text-muted-foreground truncate">
                                         {highlightMatch(String(Note?.description || "No text"), searchQuery)}
                                     </p>
                                     <p className="text-xs text-primary flex items-center gap-1">
@@ -138,7 +189,7 @@ export default function TodoItems() {
                                 animate={{ opacity: 1 }}
                                 transition={{ duration: 0.5 }}
                             >
-                                No matching tasks found.
+                                No notes here yet.
                             </motion.p>
                         )}
                     </motion.div>
@@ -146,17 +197,21 @@ export default function TodoItems() {
                     <div>
                         <div className="fixed top-0 left-0 sm:left-1/2 sm:translate-x-[-50%] p-6 bg-muted z-50 w-full max-w-5xl mx-auto">
                             <div className=" flex justify-between items-center">
-                                <RxCross2 className="sm:text-2xl text-xl cursor-pointer" onClick={() => setIsContextMenuOpenForTodos(false)} />
+                                <RxCross2 className="sm:text-2xl text-xl cursor-pointer" onClick={() => {
+                                    setIsContextMenuOpenForTodos(false)
+                                    setSelectedTodos([]);
+                                }
+                                } />
                                 <VscChecklist className="sm:text-2xl text-xl cursor-pointer" onClick={toggleSelectAll} />
                             </div>
                         </div>
+                        <span className='text-2xl font-normal ml-2'>{selectedTodos.length} Selected Item</span>
                         <motion.div
                             className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4"
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             transition={{ duration: 0.5 }}
                         >
-                            <span className='text-2xl font-normal ml-2'>{selectedTodos.length} Selected Item</span>
                             {filteredNotes.map((Note, index) => {
                                 const isSelected = selectedTodos.includes(Note.id);
                                 return (
@@ -170,11 +225,11 @@ export default function TodoItems() {
                                         whileHover={{ scale: 1.02, boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)" }}
                                         transition={{ duration: 0.3 }}
                                     >
-                                        <div className="flex flex-col gap-1">
-                                            <p className="text-sm font-medium leading-none">
+                                        <div className="flex flex-col gap-1 truncate">
+                                            <p className="text-sm font-medium leading-none truncate">
                                                 {highlightMatch(String(Note?.title || "No title"), searchQuery)}
                                             </p>
-                                            <p className="text-sm text-muted-foreground">
+                                            <p className="text-sm text-muted-foreground truncate">
                                                 {highlightMatch(String(Note?.description || "No text"), searchQuery)}
                                             </p>
                                             <p className="text-xs text-primary flex items-center gap-1">
@@ -211,7 +266,10 @@ export default function TodoItems() {
                                         <MdDriveFileMoveOutline className="text-lg" />
                                         <span className="text-xs">Move to</span>
                                     </div>
-                                    <div className="flex flex-col items-center cursor-pointer">
+                                    <div
+                                        className="flex flex-col items-center cursor-pointer"
+                                        onClick={handleDeletedTasks}
+                                    >
                                         <AiOutlineDelete className="text-lg" />
                                         <span className="text-xs">Delete</span>
                                     </div>

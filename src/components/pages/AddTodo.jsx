@@ -41,8 +41,6 @@ export default function AddTodo() {
 
     // Save Todo Data to Firestore
     const handleSaveTodo = async () => {
-        if (!TodoData.title.trim() || !TodoData.description.trim()) return;
-
         const folderTab = selectedFolder === "All" ? "Uncategorised" : selectedFolder;
 
         // Ensure pinned is always set to false
@@ -80,9 +78,14 @@ export default function AddTodo() {
                 <Textarea
                     name="description"
                     placeholder="Start writing..."
-                    className="bg-transparent border-none p-0 outline-none mt-4"
                     value={TodoData.description}
                     onChange={handleInputChange}
+                    className="bg-transparent border-none p-0 outline-none mt-4 no-scrollbar resize-none overflow-hidden"
+                    rows={1}
+                    onInput={(e) => {
+                        e.target.style.height = "auto";
+                        e.target.style.height = `${e.target.scrollHeight}px`;
+                    }}
                 />
             </div>
         </>

@@ -114,8 +114,6 @@ export default function CreateFolder() {
         }
     };
 
-    console.log("selectedFolder", rightClickedFolder)
-
     return (
         <>
             {isContextMenuOpen ? (

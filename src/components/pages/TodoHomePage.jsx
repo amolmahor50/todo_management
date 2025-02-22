@@ -3,9 +3,12 @@ import Footer from '../Footer'
 import { IoAdd } from "react-icons/io5"
 import { Link, Outlet, useLocation } from 'react-router-dom'
 import { motion } from "framer-motion";
+import { useContext } from 'react';
+import { TodoContextData } from '../context/TodoContext';
 
 function TodoHomePage() {
     const location = useLocation();
+    const { isContextMenuOpenForTodos } = useContext(TodoContextData);
 
     return (
         <>
@@ -25,21 +28,23 @@ function TodoHomePage() {
             </div>
 
             {/* Floating Button Logic */}
-            <motion.div
-                initial={{ scale: 0, opacity: 0, y: 50 }}
-                animate={{ scale: 1, opacity: 1, y: 0 }}
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                transition={{ duration: 0.3 }}
-                className="fixed bottom-20 right-6 sm:right-[20%] z-50"
-            >
-                <Link
-                    to={location.pathname === "/todo-management" ? "/addTodo" : "/todo-management/tasks"}
-                    className="rounded-full bg-yellow-500 w-[40px] h-[40px] flex justify-center items-center text-white cursor-pointer shadow-lg"
+            {
+                !isContextMenuOpenForTodos && <motion.div
+                    initial={{ scale: 0, opacity: 0, y: 50 }}
+                    animate={{ scale: 1, opacity: 1, y: 0 }}
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    transition={{ duration: 0.3 }}
+                    className="fixed bottom-20 right-6 sm:right-[20%] z-50"
                 >
-                    <IoAdd size={24} />
-                </Link>
-            </motion.div>
+                    <Link
+                        to={location.pathname === "/todo-management" ? "/addTodo" : "/todo-management/tasks"}
+                        className="rounded-full bg-yellow-500 w-[40px] h-[40px] flex justify-center items-center text-white cursor-pointer shadow-lg"
+                    >
+                        <IoAdd size={24} />
+                    </Link>
+                </motion.div>
+            }
         </>
     )
 }

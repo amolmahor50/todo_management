@@ -87,7 +87,12 @@ export default function EditTodo() {
                     value={todoData.description}
                     onChange={handleInputChange}
                     placeholder="Start writing..."
-                    className="bg-transparent border-none p-0 outline-none mt-4"
+                    className="bg-transparent border-none p-0 outline-none mt-4 no-scrollbar resize-none overflow-hidden"
+                    rows={1}
+                    onInput={(e) => {
+                        e.target.style.height = "auto"; // Reset height to auto
+                        e.target.style.height = `${e.target.scrollHeight}px`; // Adjust height based on content
+                    }}
                 />
             </div>
         </>
