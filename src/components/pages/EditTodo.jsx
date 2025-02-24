@@ -11,8 +11,6 @@ export default function EditTodo() {
     const Navigate = useNavigate();
     const { userId, folder, taskId } = useParams();
 
-    console.log(userId, folder, taskId)
-
     // Utility function to format the current date and time
     const formatDate = () => {
         const now = new Date();

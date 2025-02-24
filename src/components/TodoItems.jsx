@@ -152,8 +152,6 @@ export default function TodoItems() {
         Navigate("/create-folder", { state: { selectedTasks: selectedTasksData } });
     };
 
-    console.log(filteredNotes)
-
     return (
         <>
             {

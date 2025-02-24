@@ -12,14 +12,11 @@ function Notes() {
     } = useContext(TodoContextData);
 
     useEffect(() => {
-        const unsubscribe = fetchFoldersRealtime(user.uid, setFolderName);
-
-        return () => {
-            if (typeof unsubscribe === "function") {
-                unsubscribe();
-            }
-        };
-    }, [user?.uid]);
+        if (user?.uid) {
+            const unsubscribe = fetchFoldersRealtime(user.uid, setFolderName);
+            return () => unsubscribe && unsubscribe(); // Cleanup function to stop listening
+        }
+    }, [user]);
 
     return (
         <>

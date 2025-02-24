@@ -132,50 +132,70 @@ export const fetchFoldersRealtime = (userId, setFolderName) => {
 
     const userRef = doc(db, "users", userId);
 
-    return onSnapshot(userRef, async (docSnap) => {
+    return onSnapshot(userRef, (docSnap) => {
         if (docSnap.exists()) {
             const data = docSnap.data();
             let folders = data.folders || [];
 
-            // Ensure "All" is at the beginning and "Uncategorised" is at the end
+            // Remove "All" and "Uncategorised" from user-defined folders
             folders = folders.filter(folder => folder.name !== "All" && folder.name !== "Uncategorised");
+
+            // Always add "All" at the start and "Uncategorised" at the end
             folders.unshift({ name: "All", pinned: false });
             folders.push({ name: "Uncategorised", pinned: false });
 
-            let folderData = [];
-            let totalTasks = 0; // To store total task count
+            let folderData = folders.map(folder => ({
+                name: folder.name,
+                pinned: folder.pinned || false,
+                taskCount: 0, // Default count
+            }));
 
-            for (const folder of folders) {
+            let unsubscribeArray = [];
+
+            // Track task counts for all folders except "All"
+            let taskCounts = {};
+            let totalTasks = 0;
+
+            folders.forEach(folder => {
+                if (folder.name === "All") return; // Skip "All" since it's calculated dynamically
+
                 const tasksRef = collection(db, "users", userId, "todos", folder.name, "tasks");
-                const tasksSnapshot = await getDocs(tasksRef);
 
-                let taskCount = tasksSnapshot.size;
-                totalTasks += taskCount; // Add count to totalTasks
+                // Real-time listener for each folder's tasks
+                const unsubscribe = onSnapshot(tasksRef, (tasksSnapshot) => {
+                    let taskCount = tasksSnapshot.size;
+                    taskCounts[folder.name] = taskCount;
 
-                folderData.push({
-                    name: folder.name,
-                    pinned: folder.pinned || false,
-                    taskCount: taskCount,
+                    // Calculate total tasks across all folders (except "All" itself)
+                    totalTasks = Object.values(taskCounts).reduce((sum, count) => sum + count, 0);
+
+                    // Update folderData with new task counts
+                    folderData = folderData.map(f => {
+                        if (f.name === folder.name) return { ...f, taskCount };
+                        if (f.name === "All") return { ...f, taskCount: totalTasks }; // Update "All"
+                        return f;
+                    });
+
+                    // Sort folders: "All" first, then pinned, then others, then "Uncategorised" last
+                    folderData.sort((a, b) => {
+                        if (a.name === "All") return -1;
+                        if (b.name === "All") return 1;
+                        if (a.pinned && !b.pinned) return -1;
+                        if (!a.pinned && b.pinned) return 1;
+                        if (a.name === "Uncategorised") return 1;
+                        if (b.name === "Uncategorised") return -1;
+                        return 0;
+                    });
+
+                    // Update UI state once after processing all folders
+                    setFolderName([...folderData]);
                 });
-            }
 
-            // Sort folders: "All" first, then pinned, then others, then "Uncategorised" last
-            folderData.sort((a, b) => {
-                if (a.name === "All") return -1;
-                if (b.name === "All") return 1;
-                if (a.pinned && !b.pinned) return -1; // Pinned folders should come first
-                if (!a.pinned && b.pinned) return 1;
-                if (a.name === "Uncategorised") return 1;
-                if (b.name === "Uncategorised") return -1;
-                return 0;
+                unsubscribeArray.push(unsubscribe);
             });
 
-            // Update "All" folder to show the total task count
-            folderData = folderData.map(folder =>
-                folder.name === "All" ? { ...folder, taskCount: totalTasks } : folder
-            );
-
-            setFolderName(folderData);
+            // Cleanup function to remove listeners when component unmounts
+            return () => unsubscribeArray.forEach(unsub => unsub());
         } else {
             setFolderName([{ name: "All", pinned: false, taskCount: 0 }, { name: "Uncategorised", pinned: false, taskCount: 0 }]);
         }
@@ -502,9 +522,23 @@ export const deleteMultipleTasks = async (userId, selectedTodos) => {
             return;
         }
 
+        const taskEntries = Object.entries(selectedTodos);
+
+        // If only one task is selected, delete it directly
+        if (taskEntries.length === 1 && taskEntries[0][1].length === 1) {
+            const [folderName, taskIds] = taskEntries[0];
+            const taskId = taskIds[0];
+
+            const taskRef = doc(db, "users", userId, "todos", folderName, "tasks", taskId);
+            await deleteDoc(taskRef);
+            toast.success("Task deleted successfully!");
+            return;
+        }
+
+        // Otherwise, delete multiple tasks using batch
         const batch = writeBatch(db);
 
-        Object.entries(selectedTodos).forEach(([folderName, taskIds]) => {
+        taskEntries.forEach(([folderName, taskIds]) => {
             taskIds.forEach((taskId) => {
                 const taskRef = doc(db, "users", userId, "todos", folderName, "tasks", taskId);
                 batch.delete(taskRef);
