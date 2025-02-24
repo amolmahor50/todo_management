@@ -3,13 +3,15 @@ import { IoReturnUpBackOutline, IoReturnUpForwardOutline, IoCheckmarkOutline } f
 import { useNavigate, useParams } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { EditedfetchTodoById, TodoContextData, updateTodoIndb } from "../context/TodoContext";
 
 export default function EditTodo() {
     const { user } = useContext(TodoContextData);
     const Navigate = useNavigate();
     const { userId, folder, taskId } = useParams();
+
+    console.log(userId, folder, taskId)
 
     // Utility function to format the current date and time
     const formatDate = () => {
@@ -30,11 +32,19 @@ export default function EditTodo() {
         date: "",
     });
 
-    // Fetch Todo from Firestore in real-time
+    const textareaRef = useRef(null);
+
+    useEffect(() => {
+        if (textareaRef.current) {
+            textareaRef.current.style.height = "auto";
+            textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+        }
+    }, [todoData.description]);
+
     useEffect(() => {
         if (userId && folder && taskId) {
             const unsubscribe = EditedfetchTodoById(userId, folder, taskId, setTodoData);
-            return () => unsubscribe && unsubscribe(); // Cleanup listener on unmount
+            return () => unsubscribe && unsubscribe();
         }
     }, [userId, folder, taskId]);
 
@@ -83,16 +93,13 @@ export default function EditTodo() {
                     {formatDate()} | {todoData.title.length} characters
                 </p>
                 <Textarea
+                    ref={textareaRef}
                     name="description"
                     value={todoData.description}
                     onChange={handleInputChange}
                     placeholder="Start writing..."
                     className="bg-transparent border-none p-0 outline-none mt-4 no-scrollbar resize-none overflow-hidden"
                     rows={1}
-                    onInput={(e) => {
-                        e.target.style.height = "auto"; // Reset height to auto
-                        e.target.style.height = `${e.target.scrollHeight}px`; // Adjust height based on content
-                    }}
                 />
             </div>
         </>

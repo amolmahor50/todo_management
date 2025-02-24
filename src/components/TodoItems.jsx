@@ -47,24 +47,18 @@ export default function TodoItems() {
     }, [selectedTodos, setIsContextMenuOpenForTodos]);
 
     // Search and Sort Together
-    const filteredNotes = Notes
-        .filter((note) => {
-            const query = searchQuery.toLowerCase();
-
-            return (
-                note?.title?.toLowerCase().includes(query) ||
-                note?.description?.toLowerCase().includes(query) ||
-                note?.date?.toLowerCase().includes(query)
-            );
-        })
-        .sort((a, b) => {
-            const aTime = a.createdAt?.seconds || 0;
-            const bTime = b.createdAt?.seconds || 0;
-            if (a.pinned === b.pinned) {
-                return bTime - aTime;
-            }
-            return b.pinned - a.pinned;
-        });
+    const filteredNotes = Array.isArray(Notes) ? Notes.filter((note) => {
+        const query = searchQuery.toLowerCase();
+        return (
+            note?.title?.toLowerCase().includes(query) ||
+            note?.description?.toLowerCase().includes(query) ||
+            note?.date?.toLowerCase().includes(query)
+        );
+    }).sort((a, b) => {
+        const aTime = a.createdAt?.seconds || 0;
+        const bTime = b.createdAt?.seconds || 0;
+        return b.pinned - a.pinned || bTime - aTime;
+    }) : [];
 
     const handleEditTodo = (userId, folder, taskId) => {
         Navigate(`/editTodo/${userId}/${folder}/${taskId}`);
@@ -148,12 +142,24 @@ export default function TodoItems() {
         setIsContextMenuOpenForTodos(false);
     };
 
+    const handleMoveToFolder = () => {
+        if (!selectedTodos.length) return;
+
+        // Collect selected todos data
+        const selectedTasksData = Notes.filter(note => selectedTodos.includes(note.id));
+
+        // Navigate to create-folder and pass selected notes as state
+        Navigate("/create-folder", { state: { selectedTasks: selectedTasksData } });
+    };
+
+    console.log(filteredNotes)
+
     return (
         <>
             {
                 !isContextMenuOpenForTodos ? (
                     <motion.div
-                        className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4"
+                        className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 mt-4"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ duration: 0.5 }}
@@ -262,7 +268,10 @@ export default function TodoItems() {
                                         <TiPinOutline className="text-lg" />
                                         <span className="text-xs">Pin</span>
                                     </div>
-                                    <div className="flex flex-col items-center cursor-pointer">
+                                    <div
+                                        className="flex flex-col items-center cursor-pointer"
+                                        onClick={handleMoveToFolder}
+                                    >
                                         <MdDriveFileMoveOutline className="text-lg" />
                                         <span className="text-xs">Move to</span>
                                     </div>

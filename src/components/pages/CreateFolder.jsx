@@ -1,5 +1,5 @@
 import { useState, useContext, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { IoIosArrowRoundBack, IoIosCheckmark, IoIosAdd } from "react-icons/io";
 import { RiDeleteBinLine, RiCheckboxBlankCircleLine } from "react-icons/ri";
 import { RxCross2 } from "react-icons/rx";
@@ -10,12 +10,14 @@ import { VscChecklist } from "react-icons/vsc";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import { createFolder, deleteFolder, fetchFoldersRealtime, TodoContextData, toggleFolderPinned, updateFolderName } from "../context/TodoContext";
+import { createFolder, deleteFolder, fetchFoldersRealtime, moveSelectedTasksToFolder, TodoContextData, toggleFolderPinned, updateFolderName } from "../context/TodoContext";
 import { GoCheckCircleFill } from "react-icons/go";
 
 export default function CreateFolder() {
     const { user, folderName, setFolderName, selectedFolder, setSelectedFolder } = useContext(TodoContextData);
     const Navigate = useNavigate();
+    const location = useLocation();
+    const selectedTasks = location.state?.selectedTasks || [];
 
     const [deletedPopUpOpen, setDeletedPopUpOpen] = useState(false);
     const [openCreateFolderPopUp, setOpenCreateFolderPopUp] = useState(false);
@@ -109,9 +111,30 @@ export default function CreateFolder() {
             setRightClickedFolder([]);
             setOpenCreateFolderPopUp(false);
             setIsContextMenuOpen(false);
+            setInputFolderName("");
         } catch (error) {
             console.error("Error updating folder:", error);
         }
+    };
+
+    const handleMoveTask = async (targetFolder) => {
+        if (!selectedTasks.length) {
+            console.error("No tasks selected!");
+            return;
+        }
+
+        // Extract the folder name from the first task
+        const sourceFolder = selectedTasks[0]?.folder;
+
+        if (!sourceFolder) {
+            console.error("Source folder not found!");
+            return;
+        }
+
+        await moveSelectedTasksToFolder(user.uid, selectedTasks, sourceFolder, targetFolder);
+
+        setSelectedFolder(targetFolder);
+        Navigate("/todo-management");
     };
 
     return (
@@ -217,7 +240,10 @@ export default function CreateFolder() {
                             folderName.map((folder, index) => (
                                 <button
                                     key={index}
-                                    onClick={() => handleClickFetchData(folder.name)}
+                                    onClick={() => {
+                                        handleClickFetchData(folder.name)
+                                        handleMoveTask(folder.name)
+                                    }}
                                     onContextMenu={(e) => handleRightClick(e, folder.name)} // Detect right-click
                                     className="bg-card rounded-lg flex justify-between items-center px-4 py-2 text-sm"
                                 >
