@@ -37,13 +37,15 @@ function TodoHomePage() {
                     transition={{ duration: 0.3 }}
                     className="fixed bottom-20 right-6 sm:right-[20%] z-50"
                 >
-                    <Link
-                        to={location.pathname === "/todo-management" ? "/addTodo" : "/todo-management/tasks"}
-                        className="rounded-full bg-yellow-500 w-[40px] h-[40px] flex justify-center items-center text-white cursor-pointer shadow-lg"
-                    >
-                        <IoAdd size={24} />
-                    </Link>
-                </motion.div>
+                    {location.pathname === "/todo-management" &&
+                        <Link
+                            to="/addNotes"
+                            className="rounded-full bg-yellow-500 w-[40px] h-[40px] flex justify-center items-center text-white cursor-pointer shadow-lg"
+                        >
+                            <IoAdd size={24} />
+                        </Link>
+                    }
+                </motion.div >
             }
         </>
     )

@@ -14,6 +14,7 @@ import Notes from "./components/pages/Notes";
 import EditTodo from "./components/pages/EditTodo";
 import Profile from "./components/pages/Profile";
 import TodoItems from "./components/TodoItems";
+import TasksItems from "./components/TasksItems";
 
 
 // LoginHandler Component
@@ -86,7 +87,15 @@ const router = createBrowserRouter([
         path: 'tasks',
         element: <ProtectedRoute>
           <Tasks />
-        </ProtectedRoute>
+        </ProtectedRoute>,
+        children: [
+          {
+            path: '',
+            element: <ProtectedRoute>
+              <TasksItems />
+            </ProtectedRoute>
+          },
+        ]
       },
     ]
   },

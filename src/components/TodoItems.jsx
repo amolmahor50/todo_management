@@ -211,7 +211,7 @@ export default function TodoItems() {
                         </div>
                         <span className='text-2xl font-normal ml-2'>{selectedTodos.length} Selected Item</span>
                         <motion.div
-                            className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4"
+                            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 mt-4"
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             transition={{ duration: 0.5 }}

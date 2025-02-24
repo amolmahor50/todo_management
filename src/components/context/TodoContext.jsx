@@ -1,5 +1,5 @@
 import { createContext, useState } from "react";
-import { serverTimestamp, collection, addDoc, onSnapshot, doc, setDoc, getDocs, getDoc, updateDoc, deleteDoc, arrayRemove, writeBatch, WriteBatch } from "firebase/firestore";
+import { serverTimestamp, collection, addDoc, onSnapshot, doc, setDoc, getDocs, getDoc, updateDoc, deleteDoc, writeBatch } from "firebase/firestore";
 import { db } from "../../lib/firebaseConfig";
 import { toast } from "sonner";
 import { saveUserProfile } from "../Authentication/auth";
@@ -10,6 +10,7 @@ export const TodoContextProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [folderName, setFolderName] = useState([]);
     const [Notes, setNotes] = useState([]);
+    const [tasks, setTasks] = useState([]);
     const [selectedFolder, setSelectedFolder] = useState("All");
     const [searchQuery, setSearchQuery] = useState("");
     const [isContextMenuOpenForTodos, setIsContextMenuOpenForTodos] = useState(false);
@@ -17,7 +18,7 @@ export const TodoContextProvider = ({ children }) => {
     return (
         <TodoContextData.Provider value={{
             user, setUser, folderName, setFolderName, Notes,
-            setNotes, selectedFolder, setSelectedFolder,
+            setNotes, selectedFolder, setSelectedFolder, tasks, setTasks,
             searchQuery, setSearchQuery, isContextMenuOpenForTodos, setIsContextMenuOpenForTodos
         }}>
             {children}
@@ -289,8 +290,6 @@ export const updateFolderName = async (userId, oldName, newName) => {
             toast.error("User document not found.");
             return;
         }
-
-        console.log(userDoc.data());
 
         const userData = userDoc.data();
         let folders = userData.folders || [];

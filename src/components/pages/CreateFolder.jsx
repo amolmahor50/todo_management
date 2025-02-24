@@ -5,7 +5,7 @@ import { RiDeleteBinLine, RiCheckboxBlankCircleLine } from "react-icons/ri";
 import { RxCross2 } from "react-icons/rx";
 import { TiPinOutline } from "react-icons/ti";
 import { AiOutlineDelete } from "react-icons/ai";
-import { TbEdit } from "react-icons/tb";
+import { PiPencilSimpleLine } from "react-icons/pi";
 import { VscChecklist } from "react-icons/vsc";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -139,10 +139,10 @@ export default function CreateFolder() {
 
     return (
         <>
-            {isContextMenuOpen ? (
+            {isContextMenuOpen && rightClickedFolder.length > 0 ? (
                 <>
                     <motion.div
-                        className="w-full mx-auto max-w-5xl fixed top-0 left-0 right-0 bg-muted z-40 py-4 sm:px-1 px-4 flex justify-between items-center"
+                        className="w-full mx-auto max-w-5xl fixed top-0 left-0 right-0 bg-muted z-40 p-6 flex justify-between items-center"
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -10 }}
@@ -165,34 +165,47 @@ export default function CreateFolder() {
                             }}
                         />
                     </motion.div>
-                    <div className="grid gap-2 mt-12">
+                    <div className="grid gap-2 mt-16">
                         {Array.isArray(folderName) &&
-                            folderName.map((folder, index) => {
-                                const isSelected = Array.isArray(rightClickedFolder) && rightClickedFolder.includes(folder.name);
-                                const isExcluded = folder.name === "All" || folder.name === "Uncategorised";
+                            folderName
+                                .filter(folder => folderName.length >= 2 || folder.name !== "Uncategorised")
+                                .map((folder, index) => {
+                                    const isSelected = Array.isArray(rightClickedFolder) && rightClickedFolder.includes(folder.name);
+                                    const isExcluded = folder.name === "All" || folder.name === "Uncategorised";
 
-                                return (
-                                    <button
-                                        key={index}
-                                        className={`${isSelected ? "bg-gray-200 dark:text-black" : "bg-card"} rounded-lg flex justify-between items-center px-4 py-4 text-sm`}
-                                        onClick={() => toggleFolderSelection(folder.name)}
-                                    >
-                                        <div className="flex items-center gap-1">
-                                            <span>{folder.name}</span>
-                                        </div>
-                                        {!isExcluded ? (
-                                            isSelected ? (
-                                                <GoCheckCircleFill className="sm:text-xl text-lg" color="orange" />
-                                            ) : (
-                                                <RiCheckboxBlankCircleLine className="sm:text-xl text-lg bg-muted rounded-full" color="transparent" />
-                                            )
-                                        ) : null}
-                                    </button>
-                                );
-                            })}
+                                    return (
+                                        <button
+                                            key={index}
+                                            onClick={() => toggleFolderSelection(folder.name)}
+                                            className="bg-card rounded-lg flex justify-between items-center px-4 py-2 text-sm"
+                                        >
+                                            <div className="flex items-center gap-1">
+                                                <IoIosCheckmark
+                                                    size={30}
+                                                    color="orange"
+                                                    className={selectedFolder === folder.name ? "visible" : "invisible"}
+                                                />
+                                                <span className={selectedFolder === folder.name ? "font-semibold" : "font-normal"}>{folder.name}</span>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                {folder.pinned ? <TiPinOutline className="text-sm sm:text-lg text-yellow-600" /> : ""}
+                                                <div>
+                                                    {!isExcluded ? (
+                                                        isSelected ? (
+                                                            <GoCheckCircleFill className="sm:text-xl text-lg" color="orange" />
+                                                        ) : (
+                                                            <RiCheckboxBlankCircleLine className="sm:text-xl text-lg bg-muted rounded-full" color="transparent" />
+                                                        )
+                                                    ) : null}
+                                                </div>
+                                            </div>
+                                        </button>
+                                    )
+                                })}
                     </div>
+
                     <motion.div
-                        className="w-full mx-auto max-w-5xl fixed bottom-0 left-0 right-0 bg-muted z-40 sm:px-6 sm:py-4 px-4 py-2 flex justify-between items-center"
+                        className="w-full mx-auto max-w-5xl fixed bottom-0 left-0 right-0 bg-muted z-40 p-6 flex justify-between items-center"
                         initial={{ y: 50, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
                         transition={{ duration: 0.3 }}
@@ -221,21 +234,21 @@ export default function CreateFolder() {
                                 setInputFolderName(rightClickedFolder[0]); // Setting the value
                             }}
                         >
-                            <TbEdit className="text-lg" />
+                            <PiPencilSimpleLine className="text-lg" />
                             <span className="text-xs">Edit</span>
                         </div>
                     </motion.div>
                 </>
             ) : (
                 <>
-                    <div className="flex justify-between items-center">
+                    <div className="w-full mx-auto max-w-5xl fixed top-0 left-0 right-0 bg-muted z-40 p-6 flex justify-between items-center">
                         <IoIosArrowRoundBack className="sm:text-3xl text-2xl cursor-pointer" onClick={() => Navigate(-1)} />
                         <span>Folders</span>
                         <RiDeleteBinLine className="sm:text-xl text-lg cursor-pointer" />
                     </div>
 
                     {/* Folder List */}
-                    <div className="grid gap-2 mt-6">
+                    <div className="grid gap-2">
                         {Array.isArray(folderName) &&
                             folderName.map((folder, index) => (
                                 <button
