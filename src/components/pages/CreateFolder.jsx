@@ -248,7 +248,7 @@ export default function CreateFolder() {
                     </div>
 
                     {/* Folder List */}
-                    <div className="grid gap-2">
+                    <div className="grid gap-2 sm:mt-20 mt-16">
                         {Array.isArray(folderName) &&
                             folderName.map((folder, index) => (
                                 <button
@@ -257,7 +257,7 @@ export default function CreateFolder() {
                                         handleClickFetchData(folder.name)
                                         handleMoveTask(folder.name)
                                     }}
-                                    onContextMenu={(e) => handleRightClick(e, folder.name)} // Detect right-click
+                                    onContextMenu={(e) => handleRightClick(e, folder.name)}
                                     className="bg-card rounded-lg flex justify-between items-center px-4 py-2 text-sm"
                                 >
                                     <div className="flex items-center gap-1">

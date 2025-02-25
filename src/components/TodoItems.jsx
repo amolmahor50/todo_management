@@ -6,7 +6,7 @@ import { VscChecklist } from "react-icons/vsc";
 import { TiPinOutline } from "react-icons/ti";
 import { MdDriveFileMoveOutline } from "react-icons/md";
 import { AiOutlineDelete } from "react-icons/ai";
-import { deleteMultipleTasks, fetchAllFoldersTasks, fetchTodosRealtime, TodoContextData, togglePinStatusForTodo } from "./context/TodoContext";
+import { deleteMultipleTodos, fetchAllFoldersTasks, fetchTodosRealtime, TodoContextData, togglePinStatusForTodo } from "./context/TodoContext";
 import { GoCheckCircleFill, GoUnlock } from "react-icons/go";
 import { RiCheckboxBlankCircleLine } from "react-icons/ri";
 
@@ -134,7 +134,7 @@ export default function TodoItems() {
             }
         });
 
-        await deleteMultipleTasks(user.uid, selectedTasksByFolder);
+        await deleteMultipleTodos(user.uid, selectedTasksByFolder);
 
         setNotes(prevNotes => prevNotes.filter(note => !selectedTodos.includes(note.id)));
 

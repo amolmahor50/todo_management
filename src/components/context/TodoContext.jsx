@@ -1,5 +1,5 @@
 import { createContext, useState } from "react";
-import { serverTimestamp, collection, addDoc, onSnapshot, doc, setDoc, getDocs, getDoc, updateDoc, deleteDoc, writeBatch } from "firebase/firestore";
+import { serverTimestamp, collection, addDoc, onSnapshot, doc, setDoc, getDocs, getDoc, updateDoc, deleteDoc, writeBatch, query, orderBy } from "firebase/firestore";
 import { db } from "../../lib/firebaseConfig";
 import { toast } from "sonner";
 import { saveUserProfile } from "../Authentication/auth";
@@ -14,12 +14,15 @@ export const TodoContextProvider = ({ children }) => {
     const [selectedFolder, setSelectedFolder] = useState("All");
     const [searchQuery, setSearchQuery] = useState("");
     const [isContextMenuOpenForTodos, setIsContextMenuOpenForTodos] = useState(false);
+    const [addTaskPannelOpen, setAddTaskPannelOpen] = useState(false);
+
 
     return (
         <TodoContextData.Provider value={{
             user, setUser, folderName, setFolderName, Notes,
             setNotes, selectedFolder, setSelectedFolder, tasks, setTasks,
-            searchQuery, setSearchQuery, isContextMenuOpenForTodos, setIsContextMenuOpenForTodos
+            searchQuery, setSearchQuery, isContextMenuOpenForTodos, setIsContextMenuOpenForTodos,
+            addTaskPannelOpen, setAddTaskPannelOpen,
         }}>
             {children}
         </TodoContextData.Provider>
@@ -514,7 +517,7 @@ export const updateTodoIndb = async (userId, folderName, todoId, updatedData) =>
     }
 };
 
-export const deleteMultipleTasks = async (userId, selectedTodos) => {
+export const deleteMultipleTodos = async (userId, selectedTodos) => {
     try {
         if (!userId || !selectedTodos || Object.keys(selectedTodos).length === 0) {
             toast.error("Invalid request. No tasks selected.");
@@ -579,5 +582,92 @@ export const moveSelectedTasksToFolder = async (userId, selectedTasks, sourceFol
     } catch (error) {
         console.error(`Error moving selected tasks:`, error.message);
     }
+};
+
+export const addTasks = async (userId, taskData) => {
+    try {
+        if (!userId || !taskData.taskMessage.trim()) {
+            throw new Error("Invalid task data");
+        }
+
+        const tasksRef = collection(db, "users", userId, "tasks");
+        const docRef = await addDoc(tasksRef, {
+            ...taskData,
+            createdAt: serverTimestamp(),
+        });
+
+        const newTask = { id: docRef.id, ...taskData };
+        toast.success("Task added successfully!");
+        return newTask;
+    } catch (error) {
+        console.error("Error adding task:", error);
+        return null;
+    }
+};
+
+export const fetchTasks = (userId, setTasks) => {
+    if (!userId) return () => { };
+
+    const tasksRef = collection(db, "users", userId, "tasks");
+
+    const q = query(tasksRef, orderBy("createdAt", "desc"));
+
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+        const taskList = querySnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data(),
+        }));
+        setTasks(taskList);
+    });
+
+    return unsubscribe;
+};
+
+export const updateTask = async (userId, taskId, updatedTaskData) => {
+    try {
+        if (!userId || !taskId) {
+            throw new Error("Invalid task ID or user ID");
+        }
+
+        const taskRef = doc(db, "users", userId, "tasks", taskId);
+
+        await updateDoc(taskRef, {
+            ...updatedTaskData,
+            createdAt: serverTimestamp()
+        });
+
+        toast.success("Task updated successfully!");
+    } catch (error) {
+        console.error("Error updating task:", error);
+    }
+};
+
+export const deleteMultipleTasks = async (userId, taskIds) => {
+    try {
+        if (!userId || !taskIds.length) {
+            throw new Error("Invalid user or task IDs");
+        }
+
+        const batch = writeBatch(db);
+
+        taskIds.forEach(taskId => {
+            const taskRef = doc(db, "users", userId, "tasks", taskId);
+            batch.delete(taskRef);
+        });
+
+        await batch.commit();
+
+        toast.success("Selected tasks deleted successfully!");
+        return true;
+    } catch (error) {
+        console.error("Error deleting tasks:", error);
+        toast.error("Failed to delete selected tasks.");
+        return false;
+    }
+};
+
+export const updateTaskCompletion = async (userId, taskId, isCompleted) => {
+    const taskRef = doc(db, "users", userId, "tasks", taskId);
+    await updateDoc(taskRef, { isCompleted });
 };
 
