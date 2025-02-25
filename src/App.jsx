@@ -112,7 +112,7 @@ const router = createBrowserRouter([
     </ProtectedRoute>
   },
   {
-    path: 'addTodo',
+    path: 'addNotes',
     element: <ProtectedRoute>
       <AddTodo />
     </ProtectedRoute>

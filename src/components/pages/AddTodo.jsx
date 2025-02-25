@@ -10,7 +10,6 @@ export default function AddTodo() {
     const { user, selectedFolder } = useContext(TodoContextData);
     const Navigate = useNavigate();
 
-    // Utility function to format the current date and time
     const formatDate = () => {
         const now = new Date();
         const day = now.getDate();
@@ -23,7 +22,10 @@ export default function AddTodo() {
         return `${day} ${month} ${formattedHours}:${formattedMinutes} ${ampm}`;
     };
 
-    // Initialize Todo Data with default pinned as false
+    // Track text history for undo/redo
+    const [history, setHistory] = useState([{ title: "", description: "" }]);
+    const [historyIndex, setHistoryIndex] = useState(0);
+
     const [TodoData, setTodoData] = useState({
         title: "",
         description: "",
@@ -31,21 +33,41 @@ export default function AddTodo() {
         pinned: false,
     });
 
+    // Update history when user types
     const handleInputChange = (e) => {
         const { name, value } = e.target;
-        setTodoData((prevData) => ({
-            ...prevData,
-            [name]: value,
-        }));
+
+        const newData = { ...TodoData, [name]: value };
+        setTodoData(newData);
+
+        // Add new state to history only if it's a new change
+        const newHistory = history.slice(0, historyIndex + 1);
+        newHistory.push(newData);
+        setHistory(newHistory);
+        setHistoryIndex(newHistory.length - 1);
     };
 
-    // Save Todo Data to Firestore
+    // Undo action
+    const handleUndo = () => {
+        if (historyIndex > 0) {
+            const prevIndex = historyIndex - 1;
+            setTodoData(history[prevIndex]);
+            setHistoryIndex(prevIndex);
+        }
+    };
+
+    // Redo action
+    const handleRedo = () => {
+        if (historyIndex < history.length - 1) {
+            const nextIndex = historyIndex + 1;
+            setTodoData(history[nextIndex]);
+            setHistoryIndex(nextIndex);
+        }
+    };
+
     const handleSaveTodo = async () => {
         const folderTab = selectedFolder === "All" ? "Uncategorised" : selectedFolder;
-
-        // Ensure pinned is always set to false
         await addTodoData(user.uid, folderTab, { ...TodoData, pinned: false });
-
         Navigate('/todo-management');
     };
 
@@ -54,13 +76,9 @@ export default function AddTodo() {
             <div className="flex justify-between items-center">
                 <IoIosArrowRoundBack onClick={() => Navigate(-1)} size={30} className="cursor-pointer" />
                 <div className="flex sm:gap-8 gap-6 items-center">
-                    <IoReturnUpBackOutline size={22} className="cursor-pointer" />
-                    <IoReturnUpForwardOutline size={22} className="cursor-pointer" />
-                    <IoCheckmarkOutline
-                        size={22}
-                        className="cursor-pointer"
-                        onClick={handleSaveTodo}
-                    />
+                    <IoReturnUpBackOutline size={22} className={`cursor-pointer ${historyIndex === 0 ? 'opacity-50 cursor-not-allowed' : ''}`} onClick={handleUndo} />
+                    <IoReturnUpForwardOutline size={22} className={`cursor-pointer ${historyIndex === history.length - 1 ? 'opacity-50 cursor-not-allowed' : ''}`} onClick={handleRedo} />
+                    <IoCheckmarkOutline size={22} className="cursor-pointer" onClick={handleSaveTodo} />
                 </div>
             </div>
 

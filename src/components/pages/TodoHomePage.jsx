@@ -13,9 +13,11 @@ function TodoHomePage() {
     return (
         <>
             {/* Navbar - Centered on Large Screens */}
-            <div className='w-full sm:max-w-5xl mx-auto fixed top-0 sm:left-1/2 sm:translate-x-[-50%] left-0 sm:border-b-2 border-gray-300'>
-                <Navbar />
-            </div>
+            {!isContextMenuOpenForTodos &&
+                < div className='w-full sm:max-w-5xl mx-auto fixed top-0 sm:left-1/2 sm:translate-x-[-50%] left-0 sm:border-b-2 border-gray-300'>
+                    <Navbar />
+                </ div>
+            }
 
             {/* Content Area */}
             <div className='sm:mt-16 mt-14 pb-20'>

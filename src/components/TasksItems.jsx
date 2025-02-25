@@ -11,6 +11,7 @@ import { MdOutlineDragIndicator } from "react-icons/md";
 import { GoCheckCircleFill } from "react-icons/go";
 import { RiCheckboxBlankCircleLine } from "react-icons/ri";
 import { useSearchParams } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 
 export default function TasksItems() {
     const {
@@ -23,6 +24,7 @@ export default function TasksItems() {
         setAddTaskPannelOpen,
     } = useContext(TodoContextData);
     const [isCardVisible, setIsCardVisible] = useState(true);
+    const [deletePopUpOpen, setDeletePopUpOpen] = useState(false);
     const [selectedTasks, setSelectedTasks] = useState([]);
     const [searchParams, setSearchParams] = useSearchParams();
 
@@ -78,6 +80,7 @@ export default function TasksItems() {
             setTasks(prevTasks => prevTasks.filter(task => !selectedTasks.includes(task.id)));
             setSelectedTasks([]);
             setIsContextMenuOpenForTodos(false);
+            setDeletePopUpOpen(false);
         }
     };
 
@@ -102,7 +105,7 @@ export default function TasksItems() {
             {
                 isContextMenuOpenForTodos ? (
                     <>
-                        <div className="fixed top-0 left-0 sm:left-1/2 sm:translate-x-[-50%] sm:px-2 px-6 py-6 bg-muted z-50 w-full max-w-5xl mx-auto">
+                        <div className="fixed top-0 left-0 sm:left-1/2 sm:translate-x-[-50%] sm:px-2 px-6 py-6 z-50 w-full max-w-5xl mx-auto">
                             <div className=" flex justify-between items-center">
                                 <RxCross2 className="sm:text-2xl text-xl cursor-pointer" onClick={() => {
                                     {
@@ -208,14 +211,44 @@ export default function TasksItems() {
                         )}
 
                         <div className="w-full mx-auto max-w-5xl fixed bottom-0 left-0 right-0 bg-muted z-40 p-6 flex justify-center items-center">
-                            <div
-                                onClick={handleDeleteItems}
-                                className="flex flex-col items-center cursor-pointer"
-                            >
+                            <div className="flex flex-col items-center cursor-pointer" onClick={() => setDeletePopUpOpen(true)}>
                                 <AiOutlineDelete className="text-lg" />
                                 <span className="text-xs">Delete</span>
                             </div>
                         </div>
+                        {
+                            deletePopUpOpen && <motion.div
+                                className="fixed inset-0 flex justify-center items-center bg-black bg-opacity-30 z-40"
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                onClick={() => setDeletePopUpOpen(false)}
+                            >
+                                <motion.div
+                                    className="bg-card p-4 text-center grid gap-4 rounded-lg max-w-[450px] w-[90%] mx-auto absolute bottom-3"
+                                    initial={{ scale: 0.8, opacity: 0, y: 50 }}
+                                    animate={{ scale: 1, opacity: 1, y: 0 }}
+                                    exit={{ scale: 0.8, opacity: 0, y: 50 }}
+                                    transition={{ duration: 0.3, ease: "easeOut" }}
+                                    onClick={(e) => e.stopPropagation()}
+                                >
+                                    <h3>Delete completed tasks</h3>
+                                    <p className="text-sm text-muted-foreground">{`Delete ${selectedTasks.length} item?`}</p>
+                                    <div className="grid grid-cols-2 gap-6">
+                                        <Button variant="secondary" onClick={() => {
+                                            setSelectedTasks([])
+                                            setIsContextMenuOpenForTodos(false)
+                                            setDeletePopUpOpen(false)
+                                        }}>
+                                            Cancel
+                                        </Button>
+                                        <Button variant="destructive" onClick={handleDeleteItems}>
+                                            Delete
+                                        </Button>
+                                    </div>
+                                </motion.div>
+                            </motion.div>
+                        }
                     </>
                 )
                     :
