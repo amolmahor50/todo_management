@@ -42,6 +42,7 @@ import { auth, db } from "../../lib/firebaseConfig";
 import { toast } from "sonner";
 import { deleteDoc, doc } from "firebase/firestore";
 import { IoEyeOffOutline, IoEyeOutline } from "react-icons/io5";
+import { version } from "../../../package.json";
 
 export default function Settigs() {
     const { setUser } = useContext(TodoContextData);
@@ -338,6 +339,9 @@ export default function Settigs() {
                     </div>
                 </div>
             </div >
+            <div className="text-center text-sm text-muted-foreground [&_a]:underline hover:[&_a]:text-primary mt-12">
+                Copyright © {new Date().getFullYear()} amol.mahor. All rights reserved. Version : {version}
+            </div>
         </>
     )
 }

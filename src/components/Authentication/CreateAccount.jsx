@@ -12,6 +12,7 @@ import { doc, setDoc } from "firebase/firestore"
 import { toast } from "sonner"
 import { TodoContextData } from "../context/TodoContext"
 import { db } from "../../lib/firebaseConfig"
+import { version } from "../../../package.json";
 
 const required = [
     { regex: /.{8,}/, message: "Password must be at least 8 characters long." },
@@ -132,7 +133,7 @@ export function CreateAccount({ className, ...props }) {
                         <CardContent className="grid p-0 md:grid-cols-2">
                             <div className="relative hidden bg-muted md:block">
                                 <img
-                                    src="/placeholder.svg"
+                                    src="/Notes.jpg"
                                     alt="Image"
                                     className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
                                 />
@@ -247,8 +248,7 @@ export function CreateAccount({ className, ...props }) {
                         </CardContent>
                     </Card>
                     <div className="text-balance text-center text-xs text-muted-foreground [&_a]:underline [&_a]:underline-offset-4 hover:[&_a]:text-primary">
-                        By clicking continue, you agree to our <a href="#">Terms of Service</a>{" "}
-                        and <a href="#">Privacy Policy</a>.
+                        Copyright © {new Date().getFullYear()} amol.mahor. All rights reserved. Version : {version}
                     </div>
                 </div>
             </div>

@@ -12,6 +12,7 @@ import { TodoContextData } from "../context/TodoContext";
 import { toast } from "sonner";
 import { getUser, loginWithGoogle, loginWithEmail, loginWithFacebook } from "./auth";
 import { IoEyeOffOutline, IoEyeOutline } from "react-icons/io5";
+import { version } from "../../../package.json";
 
 export function LoginForm({ className, ...props }) {
   const { setUser } = useContext(TodoContextData);
@@ -176,7 +177,7 @@ export function LoginForm({ className, ...props }) {
               </form>
               <div className="relative hidden bg-muted md:block">
                 <img
-                  src="/placeholder.svg"
+                  src="/Notes.jpg"
                   alt="Image"
                   className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
                 />
@@ -184,10 +185,10 @@ export function LoginForm({ className, ...props }) {
             </CardContent>
           </Card>
           <div className="text-center text-xs text-muted-foreground [&_a]:underline hover:[&_a]:text-primary">
-            By clicking continue, you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
+            Copyright © {new Date().getFullYear()} amol.mahor. All rights reserved. Version : {version}
           </div>
         </div>
       </div>
-    </div>
+    </div >
   );
 }
