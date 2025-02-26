@@ -253,53 +253,8 @@ export default function TasksItems() {
                 )
                     :
                     (
-                        <>
-                            <motion.div
-                                className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 mt-4"
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                transition={{ duration: 0.5 }}
-                            >
-                                {
-                                    tasks
-                                        .filter(task =>
-                                            !task.isCompleted &&
-                                            task.taskMessage.toLowerCase().includes(searchQuery.toLowerCase())
-                                        )
-                                        .map((task, index) => (
-                                            <motion.div
-                                                key={index}
-                                                onContextMenu={(e) => handleSelectItems(e, task.id)}
-                                                className="bg-card rounded-lg px-4 py-3 flex items-center gap-2 cursor-pointer shadow-sm hover:shadow-lg"
-                                                initial={{ opacity: 0, y: 10 }}
-                                                animate={{ opacity: 1, y: 0 }}
-                                                whileHover={{ boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)" }}
-                                                transition={{ duration: 0.3 }}
-                                            >
-                                                <Checkbox
-                                                    color="orange"
-                                                    checked={task.isCompleted}
-                                                    onCheckedChange={() => toggleTaskCompletion(task.id, task.isCompleted)}
-                                                />
-
-                                                <p
-                                                    onClick={() => hanldeEditTask(task.id)}
-                                                    className="text-primary text-sm line-clamp-3 flex-1"
-                                                >
-                                                    {highlightMatch(String(task.taskMessage), searchQuery)}
-                                                </p>
-                                            </motion.div>
-                                        ))
-                                }
-                            </motion.div>
-                            <p
-                                className="text-xs sm:text-sm text-muted-foreground flex items-center gap-1 sm:mt-8 mt-4 cursor-pointer"
-                                onClick={() => setIsCardVisible(!isCardVisible)}
-                            >
-                                {isCardVisible ? <MdKeyboardArrowUp /> : <MdOutlineKeyboardArrowDown />}
-                                Completed {tasks.filter(task => task.isCompleted).length}
-                            </p>
-                            {isCardVisible &&
+                        tasks.length > 0 ? (
+                            <>
                                 <motion.div
                                     className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 mt-4"
                                     initial={{ opacity: 0 }}
@@ -309,36 +264,94 @@ export default function TasksItems() {
                                     {
                                         tasks
                                             .filter(task =>
-                                                task.isCompleted &&
+                                                !task.isCompleted &&
                                                 task.taskMessage.toLowerCase().includes(searchQuery.toLowerCase())
                                             )
                                             .map((task, index) => (
                                                 <motion.div
                                                     key={index}
                                                     onContextMenu={(e) => handleSelectItems(e, task.id)}
-                                                    className="bg-gray-200 rounded-lg px-4 py-3 flex items-center gap-2 cursor-pointer shadow-sm hover:shadow-lg"
+                                                    className="bg-card rounded-lg px-4 py-3 flex items-center gap-2 cursor-pointer shadow-sm hover:shadow-lg"
                                                     initial={{ opacity: 0, y: 10 }}
                                                     animate={{ opacity: 1, y: 0 }}
                                                     whileHover={{ boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)" }}
                                                     transition={{ duration: 0.3 }}
                                                 >
                                                     <Checkbox
-                                                        color="gray"
+                                                        color="orange"
                                                         checked={task.isCompleted}
                                                         onCheckedChange={() => toggleTaskCompletion(task.id, task.isCompleted)}
                                                     />
 
                                                     <p
                                                         onClick={() => hanldeEditTask(task.id)}
-                                                        className="dark:text-muted text-sm line-clamp-3 flex-1">
+                                                        className="text-primary text-sm line-clamp-3 flex-1"
+                                                    >
                                                         {highlightMatch(String(task.taskMessage), searchQuery)}
                                                     </p>
                                                 </motion.div>
                                             ))
                                     }
                                 </motion.div>
-                            }
-                        </>
+                                <p
+                                    className="text-xs sm:text-sm text-muted-foreground flex items-center gap-1 sm:mt-8 mt-4 cursor-pointer"
+                                    onClick={() => setIsCardVisible(!isCardVisible)}
+                                >
+                                    {isCardVisible ? <MdKeyboardArrowUp /> : <MdOutlineKeyboardArrowDown />}
+                                    Completed {tasks.filter(task => task.isCompleted).length}
+                                </p>
+                                {isCardVisible &&
+                                    <motion.div
+                                        className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 mt-4"
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        transition={{ duration: 0.5 }}
+                                    >
+                                        {
+                                            tasks
+                                                .filter(task =>
+                                                    task.isCompleted &&
+                                                    task.taskMessage.toLowerCase().includes(searchQuery.toLowerCase())
+                                                )
+                                                .map((task, index) => (
+                                                    <motion.div
+                                                        key={index}
+                                                        onContextMenu={(e) => handleSelectItems(e, task.id)}
+                                                        className="bg-gray-200 rounded-lg px-4 py-3 flex items-center gap-2 cursor-pointer shadow-sm hover:shadow-lg"
+                                                        initial={{ opacity: 0, y: 10 }}
+                                                        animate={{ opacity: 1, y: 0 }}
+                                                        whileHover={{ boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)" }}
+                                                        transition={{ duration: 0.3 }}
+                                                    >
+                                                        <Checkbox
+                                                            color="gray"
+                                                            checked={task.isCompleted}
+                                                            onCheckedChange={() => toggleTaskCompletion(task.id, task.isCompleted)}
+                                                        />
+
+                                                        <p
+                                                            onClick={() => hanldeEditTask(task.id)}
+                                                            className="dark:text-muted text-sm line-clamp-3 flex-1">
+                                                            {highlightMatch(String(task.taskMessage), searchQuery)}
+                                                        </p>
+                                                    </motion.div>
+                                                ))
+                                        }
+                                    </motion.div>
+                                }
+                            </>
+                        )
+                            :
+                            (
+                                <motion.p
+                                    className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-gray-500 text-center"
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    transition={{ duration: 0.5 }}
+                                >
+                                    No Tasks here yet.
+                                </motion.p>
+                            )
                     )
             }
 
