@@ -18,14 +18,14 @@ export default function Profile() {
 
     // Ensure formData is always initialized
     const [formData, setFormData] = useState({
-        firstName: "",
-        lastName: "",
-        email: "",
-        dateOfBirth: "",
-        mobile: "",
-        gender: "",
-        address: "",
-        photo: "",
+        firstName: user.firstName || "",
+        lastName: user.lastName || "",
+        email: user.email || "",
+        dateOfBirth: user.dateOfBirth || "",
+        mobile: user.mobile || "",
+        gender: user.gender || "",
+        address: user.address || "",
+        photo: user.photo || "",
     });
 
     // Real-time Firestore sync

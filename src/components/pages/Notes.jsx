@@ -31,10 +31,10 @@ function Notes() {
                                 <button
                                     key={index}
                                     onClick={() => setSelectedFolder(folder.name)}
-                                    className={`px-3 py-1 rounded-md border border-white text-xs flex items-center gap-1 min-w-fit
+                                    className={`truncate px-3 py-1 rounded-md border border-white text-xs flex items-center gap-1 min-w-fit
                                 ${selectedFolder === folder.name ? "bg-yellow-400 dark:text-black border-none" : ""}`}>
                                     {folder.pinned && <TiPinOutline className='text-xs sm:text-sm' color='orange' />}
-                                    {folder.name}
+                                    {(folder.name).length > 15 ? (folder.name).slice(0, 15) + "..." : folder.name}
                                     <span className="text-gray-500 text-xs">({folder.taskCount})</span>
                                 </button>
                             ))}

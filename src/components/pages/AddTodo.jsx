@@ -13,6 +13,7 @@ export default function AddTodo() {
     const { user, selectedFolder } = useContext(TodoContextData);
     const Navigate = useNavigate();
     const [sharePopUpOpen, setSharePopUpOpen] = useState(false);
+    const [showSendImg, setShowSendImg] = useState(false);
 
     const formatDate = () => {
         const now = new Date();
@@ -65,9 +66,73 @@ export default function AddTodo() {
     };
 
     const handleSaveTodo = async () => {
+        if (!TodoData.title) return Navigate(-1);
+
         const folderTab = selectedFolder === "All" ? "Uncategorised" : selectedFolder;
         await addTodoData(user.uid, folderTab, { ...TodoData, pinned: false });
         Navigate('/todo-management');
+    };
+
+    const shareText = `*${TodoData.title}*\n\n📅 Date: ${TodoData.date}\n\n${TodoData.description}`;
+
+    // Share using Installed Apps (Web Share API)
+    const handleTextShare = async () => {
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: TodoData.title,
+                    text: shareText,
+                });
+            } catch (error) {
+                console.error("Error sharing:", error);
+            }
+        } else {
+            alert("Your browser does not support native sharing.");
+        }
+    };
+
+    const handleShareAsImage = async () => {
+        setShowSendImg(true);
+
+        setTimeout(async () => {
+            const element = document.getElementById("shareable-note");
+
+            if (!element) return;
+
+            try {
+                const canvas = await html2canvas(element, {
+                    backgroundColor: null,
+                    scale: 2,
+                    x: -20,
+                    y: -20,
+                    width: element.offsetWidth + 40,
+                    height: element.offsetHeight + 40
+                });
+
+                const imageDataUrl = canvas.toDataURL("image/png");
+
+                if (navigator.share) {
+                    const blob = await (await fetch(imageDataUrl)).blob();
+                    const file = new File([blob], "Note.png", { type: "image/png" });
+
+                    try {
+                        await navigator.share({
+                            files: [file],
+                            title: "Shared Note",
+                            text: todoData.title,
+                        });
+                    } catch (error) {
+                        console.error("Error sharing:", error);
+                    }
+                } else {
+                    alert("Your browser does not support image sharing.");
+                }
+            } catch (error) {
+                console.error("Error generating image:", error);
+            }
+
+            setShowSendImg(false);
+        }, 300);
     };
 
     // Determine which icons to show
@@ -84,18 +149,31 @@ export default function AddTodo() {
                             <IoReturnUpBackOutline
                                 size={22}
                                 className={`cursor-pointer ${historyIndex === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                onClick={handleUndo}
+                                onMouseDown={(e) => {
+                                    e.preventDefault();
+                                    handleUndo();
+                                }}
                             />
                             <IoReturnUpForwardOutline
                                 size={22}
                                 className={`cursor-pointer ${historyIndex === history.length - 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                onClick={handleRedo}
+                                onMouseDown={(e) => {
+                                    e.preventDefault();
+                                    handleRedo();
+                                }}
+                            />
+                            <IoCheckmarkOutline size={22} className="cursor-pointer"
+                                onMouseDown={(e) => {
+                                    e.preventDefault();
+                                    handleSaveTodo();
+                                }}
                             />
                         </>
                     ) : shouldShowShareIcon ? (
-                        <PiShareFill size={20} className="cursor-pointer" onClick={() => setSharePopUpOpen(true)} />
+                        <div className="flex items-center gap-6">
+                            <PiShareFill size={20} className="cursor-pointer" onClick={() => setSharePopUpOpen(true)} />
+                        </div>
                     ) : null}
-                    <IoCheckmarkOutline size={22} className="cursor-pointer" onClick={handleSaveTodo} />
                 </div>
             </div>
 
@@ -145,14 +223,28 @@ export default function AddTodo() {
                         onClick={(e) => e.stopPropagation()}
                     >
                         <h3 className="text-center">Share note</h3>
-                        <p className="text-sm text-primary cursor-pointer">Share note as text</p>
-                        <p className="text-sm text-primary cursor-pointer">Share note as picture</p>
+                        <p className="text-sm text-primary cursor-pointer" onClick={handleTextShare}>Share note as text</p>
+                        <p className="text-sm text-primary cursor-pointer" onClick={handleShareAsImage}>Share note as picture</p>
                         <Button variant="secondary" onClick={() => setSharePopUpOpen(false)}>
                             Cancel
                         </Button>
                     </motion.div>
                 </motion.div>
             }
+            {/* Shareable Note - Only visible when showNote is true */}
+            {showSendImg && (
+                <div className="w-[380px] p-6 bg-gray-100">
+                    <div
+                        id="shareable-note"
+                        className="w-[350px] p-4 border-2 border-gray-400 rounded-lg bg-white shadow-lg m-6"
+                    >
+                        <h2 className="text-lg font-bold text-black">{todoData.title}</h2>
+                        <p className="text-xs text-muted-foreground mt-1">📅 {todoData.date}</p>
+                        <hr className="my-2 border-gray-300" />
+                        <p className="text-sm text-gray-700">{todoData.description}</p>
+                    </div>
+                </div>
+            )}
         </>
     );
 }

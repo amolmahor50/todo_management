@@ -142,7 +142,7 @@ export default function CreateFolder() {
             {isContextMenuOpen && rightClickedFolder.length > 0 ? (
                 <>
                     <motion.div
-                        className="w-full mx-auto max-w-5xl fixed top-0 left-0 right-0 bg-muted z-40 p-6 flex justify-between items-center"
+                        className="w-full mx-auto max-w-5xl fixed top-0 left-0 right-0 bg-muted z-40 py-6 px-6 sm:px-0 flex justify-between items-center"
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -10 }}
@@ -165,7 +165,7 @@ export default function CreateFolder() {
                             }}
                         />
                     </motion.div>
-                    <div className="grid gap-2 mt-16">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 my-20">
                         {Array.isArray(folderName) &&
                             folderName
                                 .filter(folder => folderName.length >= 2 || folder.name !== "Uncategorised")
@@ -177,15 +177,19 @@ export default function CreateFolder() {
                                         <button
                                             key={index}
                                             onClick={() => toggleFolderSelection(folder.name)}
-                                            className="bg-card rounded-lg flex justify-between items-center px-4 py-2 text-sm"
+                                            className="bg-card rounded-lg flex justify-between items-center px-4 py-2 text-sm truncate"
                                         >
-                                            <div className="flex items-center gap-1">
+                                            <div className="flex items-center gap-1 flex-1 truncate mr-4">
                                                 <IoIosCheckmark
                                                     size={30}
                                                     color="orange"
                                                     className={selectedFolder === folder.name ? "visible" : "invisible"}
                                                 />
-                                                <span className={selectedFolder === folder.name ? "font-semibold" : "font-normal"}>{folder.name}</span>
+                                                <span
+                                                    className={`flex-1 flex justify-start items-center truncate ${selectedFolder === folder.name ? "font-semibold" : "font-normal"}`}
+                                                >
+                                                    {folder.name}
+                                                </span>
                                             </div>
                                             <div className="flex items-center gap-2">
                                                 {folder.pinned ? <TiPinOutline className="text-sm sm:text-lg text-yellow-600" /> : ""}
@@ -200,12 +204,13 @@ export default function CreateFolder() {
                                                 </div>
                                             </div>
                                         </button>
+
                                     )
                                 })}
                     </div>
 
                     <motion.div
-                        className="w-full mx-auto max-w-5xl fixed bottom-0 left-0 right-0 bg-muted z-40 p-6 flex justify-between items-center"
+                        className="w-full mx-auto max-w-5xl fixed bottom-0 left-0 right-0 bg-muted z-40 py-6 px-6 sm:px-0 flex justify-between items-center"
                         initial={{ y: 50, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
                         transition={{ duration: 0.3 }}
@@ -241,32 +246,36 @@ export default function CreateFolder() {
                 </>
             ) : (
                 <>
-                    <div className="w-full mx-auto max-w-5xl fixed top-0 left-0 right-0 bg-muted z-40 p-6 flex justify-between items-center">
+                    <div className="w-full mx-auto max-w-5xl fixed top-0 left-0 right-0 bg-muted z-40 py-6 sm:px-0 px-6 flex justify-between items-center">
                         <IoIosArrowRoundBack className="sm:text-3xl text-2xl cursor-pointer" onClick={() => Navigate(-1)} />
                         <span>Folders</span>
                         <RiDeleteBinLine className="sm:text-xl text-lg cursor-pointer" />
                     </div>
 
                     {/* Folder List */}
-                    <div className="grid gap-2 sm:mt-20 mt-16">
+                    <div className="grid sm:grid-cols-2 md:grid-cols-3 grid-cols-1 gap-2 mt-20">
                         {Array.isArray(folderName) &&
                             folderName.map((folder, index) => (
                                 <button
                                     key={index}
                                     onClick={() => {
-                                        handleClickFetchData(folder.name)
-                                        handleMoveTask(folder.name)
+                                        handleClickFetchData(folder.name);
+                                        handleMoveTask(folder.name);
                                     }}
                                     onContextMenu={(e) => handleRightClick(e, folder.name)}
-                                    className="bg-card rounded-lg flex justify-between items-center px-4 py-2 text-sm"
+                                    className="bg-card rounded-lg flex justify-between items-center px-4 py-2 text-sm truncate"
                                 >
-                                    <div className="flex items-center gap-1">
+                                    <div className="flex items-center gap-1 flex-1 mr-4 truncate">
                                         <IoIosCheckmark
                                             size={30}
                                             color="orange"
                                             className={selectedFolder === folder.name ? "visible" : "invisible"}
                                         />
-                                        <span className={selectedFolder === folder.name ? "font-semibold" : "font-normal"}>{folder.name}</span>
+                                        <span
+                                            className={`flex-1 flex justify-start items-center truncate ${selectedFolder === folder.name ? "font-semibold" : "font-normal"}`}
+                                        >
+                                            {folder.name}
+                                        </span>
                                     </div>
                                     <div className="flex items-center gap-2">
                                         {folder.pinned ? <TiPinOutline className="text-sm sm:text-lg text-yellow-600" /> : ""}
@@ -277,7 +286,7 @@ export default function CreateFolder() {
                     </div>
 
                     {/* New Folder Button */}
-                    <div className="bg-card rounded-lg flex justify-center items-center mt-4 px-4 py-2">
+                    <div className="bg-card rounded-lg flex justify-center items-center mt-4 mb-8 px-4 py-2">
                         <div className="flex flex-col gap-1 items-center cursor-pointer" onClick={() => setOpenCreateFolderPopUp(true)}>
                             <IoIosAdd className="rounded-full bg-yellow-400 text-white text-xl" />
                             <span className="text-xs sm:text-sm">New folder</span>

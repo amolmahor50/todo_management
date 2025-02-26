@@ -6,15 +6,27 @@ import { Textarea } from "@/components/ui/textarea";
 import { useContext, useEffect, useRef, useState } from "react";
 import { EditedfetchTodoById, TodoContextData, updateTodoIndb } from "../context/TodoContext";
 import { PiShareFill } from "react-icons/pi";
+import { BsThreeDotsVertical } from "react-icons/bs";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import html2canvas from "html2canvas";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { deleteDoc, doc } from "firebase/firestore";
+import { db } from "../../lib/firebaseConfig";
 
 export default function EditTodo() {
-    const { user } = useContext(TodoContextData);
+    const {
+        Notes,
+    } = useContext(TodoContextData);
     const Navigate = useNavigate();
     const { userId, folder, taskId } = useParams();
     const [sharePopUpOpen, setSharePopUpOpen] = useState(false);
+    const [showSendImg, setShowSendImg] = useState(false);
 
     // Utility function to format the current date and time
     const formatDate = () => {
@@ -50,7 +62,10 @@ export default function EditTodo() {
 
     useEffect(() => {
         if (userId && folder && taskId) {
-            const unsubscribe = EditedfetchTodoById(userId, folder, taskId, setTodoData);
+            const unsubscribe = EditedfetchTodoById(userId, folder, taskId, (data) => {
+                setTodoData(data || { title: "", description: "", date: "" });
+            });
+
             return () => unsubscribe && unsubscribe();
         }
     }, [userId, folder, taskId]);
@@ -115,39 +130,67 @@ export default function EditTodo() {
     };
 
     const handleShareAsImage = async () => {
-        const element = document.getElementById("shareable-note");
+        setShowSendImg(true);
 
-        if (!element) return;
+        setTimeout(async () => {
+            const element = document.getElementById("shareable-note");
 
-        try {
-            const canvas = await html2canvas(element, {
-                backgroundColor: null,
-                scale: 2,
-                ignoreElements: (el) => el.tagName === "IMG", // Hide images
-            });
+            if (!element) return;
 
-            const imageDataUrl = canvas.toDataURL("image/png");
+            try {
+                const canvas = await html2canvas(element, {
+                    backgroundColor: null,
+                    scale: 2,
+                    x: -20,
+                    y: -20,
+                    width: element.offsetWidth + 40,
+                    height: element.offsetHeight + 40
+                });
 
-            if (navigator.share) {
-                const blob = await (await fetch(imageDataUrl)).blob();
-                const file = new File([blob], "Note.png", { type: "image/png" });
+                const imageDataUrl = canvas.toDataURL("image/png");
 
-                try {
-                    await navigator.share({
-                        files: [file],
-                        title: "Shared Note",
-                        text: todoData.title,
-                    });
-                } catch (error) {
-                    console.error("Error sharing:", error);
+                if (navigator.share) {
+                    const blob = await (await fetch(imageDataUrl)).blob();
+                    const file = new File([blob], "Note.png", { type: "image/png" });
+
+                    try {
+                        await navigator.share({
+                            files: [file],
+                            title: "Shared Note",
+                            text: todoData.title,
+                        });
+                    } catch (error) {
+                        console.error("Error sharing:", error);
+                    }
+                } else {
+                    alert("Your browser does not support image sharing.");
                 }
-            } else {
-                alert("Your browser does not support image sharing.");
+            } catch (error) {
+                console.error("Error generating image:", error);
             }
-        } catch (error) {
-            console.error("Error generating image:", error);
-        }
+
+            setShowSendImg(false);
+            setSharePopUpOpen(false);
+        }, 300);
     };
+
+    const handleDeletedTask = async () => {
+        try {
+            await deleteDoc(doc(db, "users", userId, "todos", folder, "tasks", taskId));
+            console.log("Task deleted successfully!");
+            Navigate(-1);
+        } catch (error) {
+            console.error("Error deleting task:", error);
+        }
+    }
+
+    const handleMoveTask = () => {
+
+        // Collect selected todos data
+        const selectedTasksData = Notes.filter(note => note.id === taskId);
+        // Navigate to create-folder and pass selected notes as state
+        Navigate("/create-folder", { state: { selectedTasks: selectedTasksData } });
+    }
 
     // Determine which icons to show
     const shouldShowShareIcon = !isEditing && (todoData.title || todoData.description);
@@ -163,18 +206,51 @@ export default function EditTodo() {
                             <IoReturnUpBackOutline
                                 size={22}
                                 className={`cursor-pointer ${historyIndex === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                onClick={handleUndo}
+                                onMouseDown={(e) => {
+                                    e.preventDefault();
+                                    handleUndo();
+                                }}
                             />
                             <IoReturnUpForwardOutline
                                 size={22}
                                 className={`cursor-pointer ${historyIndex === history.length - 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                onClick={handleRedo}
+                                onMouseDown={(e) => {
+                                    e.preventDefault();
+                                    handleRedo();
+                                }}
+                            />
+                            <IoCheckmarkOutline size={22} className="cursor-pointer"
+                                onMouseDown={(e) => {
+                                    e.preventDefault();
+                                    handleSaveTodo();
+                                }}
                             />
                         </>
                     ) : shouldShowShareIcon ? (
-                        <PiShareFill size={20} className="cursor-pointer" onClick={() => setSharePopUpOpen(true)} />
+                        <div className="flex items-center gap-6">
+                            <PiShareFill size={20} className="cursor-pointer" onClick={() => setSharePopUpOpen(true)} />
+                            <DropdownMenu>
+                                <DropdownMenuTrigger className="outline-none cursor-pointer flex items-center gap-1">
+                                    <BsThreeDotsVertical size={18} className="cursor-pointer" />
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent className="relative sm:right-20 right-2">
+                                    <DropdownMenuItem >
+                                        Hide
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem>
+                                        Place on Home screen
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={handleMoveTask}>
+                                        Move to
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={handleDeletedTask}>
+                                        Delete
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        </div>
                     ) : null}
-                    <IoCheckmarkOutline size={22} className="cursor-pointer" onClick={handleSaveTodo} />
+
                 </div>
             </div>
 
@@ -228,12 +304,20 @@ export default function EditTodo() {
                     </motion.div>
                 </motion.div>
             }
-            <div id="shareable-note" className="w-[350px] p-4 border-2 border-gray-400 rounded-lg bg-white shadow-lg">
-                <h2 className="text-lg font-bold text-black">{todoData.title}</h2>
-                <p className="text-xs text-muted-foreground mt-1">📅 {todoData.date}</p>
-                <hr className="my-2 border-gray-300" />
-                <p className="text-sm text-gray-700">{todoData.description}</p>
-            </div>
+            {/* Shareable Note - Only visible when showNote is true */}
+            {showSendImg && (
+                <div className="w-[380px] p-6 bg-gray-100">
+                    <div
+                        id="shareable-note"
+                        className="w-[350px] p-4 border-2 border-gray-400 rounded-lg bg-white shadow-lg m-6"
+                    >
+                        <h2 className="text-lg font-bold text-black">{todoData.title}</h2>
+                        <p className="text-xs text-muted-foreground mt-1">📅 {todoData.date}</p>
+                        <hr className="my-2 border-gray-300" />
+                        <p className="text-sm text-gray-700">{todoData.description}</p>
+                    </div>
+                </div>
+            )}
         </>
     );
 }

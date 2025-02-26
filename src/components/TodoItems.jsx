@@ -9,6 +9,7 @@ import { AiOutlineDelete } from "react-icons/ai";
 import { deleteMultipleTodos, fetchAllFoldersTasks, fetchTodosRealtime, TodoContextData, togglePinStatusForTodo } from "./context/TodoContext";
 import { GoCheckCircleFill, GoUnlock } from "react-icons/go";
 import { RiCheckboxBlankCircleLine } from "react-icons/ri";
+import { Button } from "@/components/ui/button";
 
 export default function TodoItems() {
     const {
@@ -22,6 +23,7 @@ export default function TodoItems() {
     } = useContext(TodoContextData);
     const Navigate = useNavigate();
     const [selectedTodos, setSelectedTodos] = useState([]);
+    const [deletedPopUpOpen, setDeletedPopUpOpen] = useState(false);
 
     useEffect(() => {
         let unsubscribe;
@@ -138,6 +140,7 @@ export default function TodoItems() {
 
         setNotes(prevNotes => prevNotes.filter(note => !selectedTodos.includes(note.id)));
 
+        setDeletedPopUpOpen(false);
         setSelectedTodos([]);
         setIsContextMenuOpenForTodos(false);
     };
@@ -188,7 +191,7 @@ export default function TodoItems() {
                             ))
                         ) : (
                             <motion.p
-                                className="text-center text-gray-500 col-span-2 mt-8"
+                                className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-gray-500 text-center"
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 transition={{ duration: 0.5 }}
@@ -199,7 +202,7 @@ export default function TodoItems() {
                     </motion.div>
                 ) : (
                     <div>
-                        <div className="fixed top-0 left-0 sm:left-1/2 sm:translate-x-[-50%] p-6 bg-muted z-50 w-full max-w-5xl mx-auto">
+                        <div className="fixed top-0 left-0 sm:left-1/2 sm:translate-x-[-50%] py-6 sm:px-0 px-6 bg-muted z-50 w-full max-w-5xl mx-auto">
                             <div className=" flex justify-between items-center">
                                 <RxCross2 className="sm:text-2xl text-xl cursor-pointer" onClick={() => {
                                     setIsContextMenuOpenForTodos(false)
@@ -254,7 +257,7 @@ export default function TodoItems() {
                         </motion.div>
                         {
                             Notes?.map((Note, index) => (
-                                <div key={index} className="w-full mx-auto max-w-5xl fixed bottom-0 left-0 right-0 bg-muted z-40 p-6 flex justify-between items-center">
+                                <div key={index} className="w-full mx-auto max-w-5xl fixed bottom-0 left-0 right-0 bg-muted z-40 py-6 sm:px-0 px-6 flex justify-between items-center">
                                     <div className="flex flex-col items-center cursor-pointer">
                                         <GoUnlock className="text-lg" />
                                         <span className="text-xs">Hide</span>
@@ -275,11 +278,44 @@ export default function TodoItems() {
                                     </div>
                                     <div
                                         className="flex flex-col items-center cursor-pointer"
-                                        onClick={handleDeletedTasks}
+                                        onClick={() => setDeletedPopUpOpen(true)}
                                     >
                                         <AiOutlineDelete className="text-lg" />
                                         <span className="text-xs">Delete</span>
                                     </div>
+                                    {
+                                        deletedPopUpOpen && <motion.div
+                                            className="fixed inset-0 flex justify-center items-center z-40"
+                                            initial={{ opacity: 0 }}
+                                            animate={{ opacity: 1 }}
+                                            exit={{ opacity: 0 }}
+                                            onClick={() => setDeletedPopUpOpen(false)}
+                                        >
+                                            <motion.div
+                                                className="bg-card p-4 text-center grid gap-4 rounded-lg max-w-[450px] w-[90%] mx-auto absolute bottom-3"
+                                                initial={{ scale: 0.8, opacity: 0, y: 50 }}
+                                                animate={{ scale: 1, opacity: 1, y: 0 }}
+                                                exit={{ scale: 0.8, opacity: 0, y: 50 }}
+                                                transition={{ duration: 0.3, ease: "easeOut" }}
+                                                onClick={(e) => e.stopPropagation()}
+                                            >
+                                                <h3>Delete completed tasks</h3>
+                                                <p className="text-sm text-muted-foreground">{`Delete ${selectedTodos.length} item?`}</p>
+                                                <div className="grid grid-cols-2 gap-6">
+                                                    <Button variant="secondary" onClick={() => {
+                                                        setDeletedPopUpOpen(false)
+                                                        setIsContextMenuOpenForTodos(false)
+                                                        setSelectedTodos([]);
+                                                    }}>
+                                                        Cancel
+                                                    </Button>
+                                                    <Button variant="destructive" onClick={handleDeletedTasks}>
+                                                        Delete
+                                                    </Button>
+                                                </div>
+                                            </motion.div>
+                                        </motion.div>
+                                    }
                                 </div>
                             ))
                         }
