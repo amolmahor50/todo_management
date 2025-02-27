@@ -11,9 +11,13 @@ import { useNavigate } from "react-router-dom";
 import { TodoContextData, userProfileData } from "../context/TodoContext";
 import { doc, onSnapshot } from "firebase/firestore";
 import { db } from "../../lib/firebaseConfig";
+import { Textarea } from "@/components/ui/textarea";
 
 export default function Profile() {
-    const { user, setUser } = useContext(TodoContextData);
+    const {
+        user,
+        setUser
+    } = useContext(TodoContextData);
     const navigate = useNavigate();
 
     // Ensure formData is always initialized
@@ -175,7 +179,7 @@ export default function Profile() {
 
                     <div className="grid gap-2">
                         <Label>Address</Label>
-                        <textarea name="address" placeholder="Address" rows={3} value={formData.address} onChange={handleChange} className="p-3 border-2 rounded-md focus:outline-none" />
+                        <Textarea name="address" placeholder="Address" rows={3} value={formData.address} onChange={handleChange} className="p-3 border-2 rounded-md focus:outline-none" />
                     </div>
 
                     <div className="flex justify-end">

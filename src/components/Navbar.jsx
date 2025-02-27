@@ -9,14 +9,14 @@ export default function Navbar() {
     return (
         <div className="flex justify-between items-center bg-muted px-8 py-4">
             <div></div>
-            <div className="text-medium">
+            <div>
                 {location.pathname === "/todo-management" ? "Notes" : "Tasks"}
             </div>
             <div className="flex gap-6 items-center">
                 {location.pathname === "/todo-management" && (
-                    <SlFolderAlt className="text-xl cursor-pointer" onClick={() => navigate('/create-folder')} />
+                    <SlFolderAlt size={22} className="cursor-pointer" onClick={() => navigate('/create-folder')} />
                 )}
-                <IoSettingsOutline className="text-xl cursor-pointer" onClick={() => navigate("/setting")} />
+                <IoSettingsOutline size={22} className="cursor-pointer" onClick={() => navigate("/setting")} />
             </div>
         </div>
     );

@@ -5,10 +5,12 @@ import { TiPinOutline } from "react-icons/ti";
 import { fetchFoldersRealtime, TodoContextData } from '../context/TodoContext'
 
 function Notes() {
-    const { user,
+    const {
+        user,
         folderName,
         setFolderName,
-        selectedFolder, setSelectedFolder,
+        selectedFolder,
+        setSelectedFolder,
         isContextMenuOpenForTodos
     } = useContext(TodoContextData);
 
@@ -31,11 +33,11 @@ function Notes() {
                                 <button
                                     key={index}
                                     onClick={() => setSelectedFolder(folder.name)}
-                                    className={`truncate px-3 py-1 rounded-md border border-white text-xs flex items-center gap-1 min-w-fit
-                                ${selectedFolder === folder.name ? "bg-yellow-400 dark:text-black border-none" : ""}`}>
+                                    className={`truncate px-3 py-1 rounded-md border-2 border-accent-foreground shadow-xl text-xs flex items-center gap-1
+                                ${selectedFolder === folder.name ? "bg-accent-foreground text-accent" : ""}`}>
                                     {folder.pinned && <TiPinOutline className='text-xs sm:text-sm' color='orange' />}
                                     {(folder.name).length > 15 ? (folder.name).slice(0, 15) + "..." : folder.name}
-                                    <span className="text-gray-500 text-xs">({folder.taskCount})</span>
+                                    <span className="text-xs">({folder.taskCount})</span>
                                 </button>
                             ))}
                         </div>

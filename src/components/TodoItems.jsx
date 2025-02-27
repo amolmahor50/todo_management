@@ -6,7 +6,7 @@ import { VscChecklist } from "react-icons/vsc";
 import { TiPinOutline } from "react-icons/ti";
 import { MdDriveFileMoveOutline } from "react-icons/md";
 import { AiOutlineDelete } from "react-icons/ai";
-import { deleteMultipleTodos, fetchAllFoldersTasks, fetchTodosRealtime, TodoContextData, togglePinStatusForTodo } from "./context/TodoContext";
+import { deleteMultipleTodos, fetchAllFoldersTasks, fetchTodosRealtime, TodoContextData, toggleHiddenStatusForTodo, togglePinStatusForTodo } from "./context/TodoContext";
 import { GoCheckCircleFill, GoUnlock } from "react-icons/go";
 import { RiCheckboxBlankCircleLine } from "react-icons/ri";
 import { Button } from "@/components/ui/button";
@@ -40,13 +40,6 @@ export default function TodoItems() {
             }
         };
     }, [user, selectedFolder, searchQuery]);
-
-
-    useEffect(() => {
-        if (selectedTodos.length === 0) {
-            setIsContextMenuOpenForTodos(false);
-        }
-    }, [selectedTodos, setIsContextMenuOpenForTodos]);
 
     // Search and Sort Together
     const filteredNotes = Array.isArray(Notes) ? Notes.filter((note) => {
@@ -123,6 +116,33 @@ export default function TodoItems() {
         setIsContextMenuOpenForTodos(false);
     };
 
+    const handleHiddenTodo = async () => {
+        if (!selectedTodos.length) return;
+
+        const selectedTasksByFolder = {};
+        Notes.forEach((note) => {
+            if (selectedTodos.includes(note.id)) {
+                if (!selectedTasksByFolder[note.folder]) {
+                    selectedTasksByFolder[note.folder] = [];
+                }
+                selectedTasksByFolder[note.folder].push(note);
+            }
+        });
+
+        // Update pin status for each selected task in Firestore
+        const batchPromises = Object.entries(selectedTasksByFolder).map(async ([folderName, tasks]) => {
+            return Promise.all(tasks.map(async (task) => {
+                await toggleHiddenStatusForTodo(user.uid, folderName, task.id, task.hiddenTask);
+            }));
+        });
+
+        await Promise.all(batchPromises);
+
+        // DO NOT update setNotes manually, Firestore's onSnapshot will handle it
+        setSelectedTodos([]);
+        setIsContextMenuOpenForTodos(false);
+    }
+
     const handleDeletedTasks = async () => {
         if (!selectedTodos.length) return;
 
@@ -166,29 +186,31 @@ export default function TodoItems() {
                         transition={{ duration: 0.5 }}
                     >
                         {filteredNotes.length > 0 ? (
-                            filteredNotes.map((Note, index) => (
-                                <motion.div
-                                    key={index}
-                                    onClick={() => handleEditTodo(user.uid, Note.folder, Note.id)}
-                                    onContextMenu={(e) => handleRightClick(e, Note.id)}
-                                    className="bg-card rounded-lg px-4 py-3 flex flex-col gap-1 cursor-pointer shadow-sm hover:shadow-lg"
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    whileHover={{ boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)" }}
-                                    transition={{ duration: 0.3 }}
-                                >
-                                    <p className="text-sm font-medium leading-none truncate">
-                                        {highlightMatch(String(Note?.title || "No title"), searchQuery)}
-                                    </p>
-                                    <p className="text-sm text-muted-foreground truncate">
-                                        {highlightMatch(String(Note?.description || "No text"), searchQuery)}
-                                    </p>
-                                    <p className="text-xs text-primary flex items-center gap-1">
-                                        {highlightMatch(String(Note?.date || ""), searchQuery)}
-                                        {Note.pinned && <TiPinOutline color="orange" />}
-                                    </p>
-                                </motion.div>
-                            ))
+                            filteredNotes
+                                .filter(task => !task.hiddenTask)
+                                .map((Note, index) => (
+                                    <motion.div
+                                        key={index}
+                                        onClick={() => handleEditTodo(user.uid, Note.folder, Note.id)}
+                                        onContextMenu={(e) => handleRightClick(e, Note.id)}
+                                        className="bg-card rounded-lg px-4 py-3 flex flex-col gap-1 cursor-pointer shadow-sm hover:shadow-lg"
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        whileHover={{ boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)" }}
+                                        transition={{ duration: 0.3 }}
+                                    >
+                                        <p className="text-sm font-medium leading-none truncate">
+                                            {highlightMatch(String(Note?.title || "No title"), searchQuery)}
+                                        </p>
+                                        <p className="text-sm text-muted-foreground truncate">
+                                            {highlightMatch(String(Note?.description || "No text"), searchQuery)}
+                                        </p>
+                                        <p className="text-xs text-primary flex items-center gap-1">
+                                            {highlightMatch(String(Note?.date || ""), searchQuery)}
+                                            {Note.pinned && <TiPinOutline color="orange" />}
+                                        </p>
+                                    </motion.div>
+                                ))
                         ) : (
                             <motion.p
                                 className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-gray-500 text-center"
@@ -204,12 +226,12 @@ export default function TodoItems() {
                     <div>
                         <div className="fixed top-0 left-0 sm:left-1/2 sm:translate-x-[-50%] py-6 sm:px-0 px-6 bg-muted z-50 w-full max-w-5xl mx-auto">
                             <div className=" flex justify-between items-center">
-                                <RxCross2 className="sm:text-2xl text-xl cursor-pointer" onClick={() => {
+                                <RxCross2 className="cursor-pointer" size={22} onClick={() => {
                                     setIsContextMenuOpenForTodos(false)
                                     setSelectedTodos([]);
                                 }
                                 } />
-                                <VscChecklist className="sm:text-2xl text-xl cursor-pointer" onClick={toggleSelectAll} />
+                                <VscChecklist className="cursor-pointer" size={22} onClick={toggleSelectAll} />
                             </div>
                         </div>
                         <span className='text-2xl font-normal ml-2'>{selectedTodos.length} Selected Item</span>
@@ -219,47 +241,49 @@ export default function TodoItems() {
                             animate={{ opacity: 1 }}
                             transition={{ duration: 0.5 }}
                         >
-                            {filteredNotes.map((Note, index) => {
-                                const isSelected = selectedTodos.includes(Note.id);
-                                return (
-                                    <motion.div
-                                        key={index}
-                                        onClick={() => toggleTodoSelection(Note.id)}
-                                        onContextMenu={(e) => handleRightClick(e, Note.id)}
-                                        className={`${isSelected ? "bg-gray-200" : "bg-card"} rounded-lg px-4 py-3 flex items-center justify-between cursor-pointer shadow-sm hover:shadow-lg`}
-                                        initial={{ opacity: 0, y: 10 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        whileHover={{ scale: 1.02, boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)" }}
-                                        transition={{ duration: 0.3 }}
-                                    >
-                                        <div className="flex flex-col gap-1 truncate">
-                                            <p className="text-sm font-medium leading-none truncate">
-                                                {highlightMatch(String(Note?.title || "No title"), searchQuery)}
-                                            </p>
-                                            <p className="text-sm text-muted-foreground truncate">
-                                                {highlightMatch(String(Note?.description || "No text"), searchQuery)}
-                                            </p>
-                                            <p className="text-xs text-primary flex items-center gap-1">
-                                                {highlightMatch(String(Note?.date || ""), searchQuery)}
-                                                {Note.pinned && <TiPinOutline color="orange" />}
-                                            </p>
-                                        </div>
-                                        <div>
-                                            {isSelected ? (
-                                                <GoCheckCircleFill className="sm:text-xl text-lg" color="orange" />
-                                            ) : (
-                                                <RiCheckboxBlankCircleLine className="sm:text-xl text-lg bg-muted rounded-full" color="transparent" />
-                                            )}
-                                        </div>
-                                    </motion.div>
-                                );
-                            })}
+                            {filteredNotes
+                                .filter(task => !task.hiddenTask)
+                                .map((Note, index) => {
+                                    const isSelected = selectedTodos.includes(Note.id);
+                                    return (
+                                        <motion.div
+                                            key={index}
+                                            onClick={() => toggleTodoSelection(Note.id)}
+                                            onContextMenu={(e) => handleRightClick(e, Note.id)}
+                                            className={`${isSelected ? "bg-gray-200" : "bg-card"} rounded-lg px-4 py-3 flex items-center justify-between cursor-pointer shadow-sm hover:shadow-lg`}
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            whileHover={{ scale: 1.02, boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)" }}
+                                            transition={{ duration: 0.3 }}
+                                        >
+                                            <div className="flex flex-col gap-1 truncate">
+                                                <p className="text-sm font-medium leading-none truncate">
+                                                    {highlightMatch(String(Note?.title || "No title"), searchQuery)}
+                                                </p>
+                                                <p className="text-sm text-muted-foreground truncate">
+                                                    {highlightMatch(String(Note?.description || "No text"), searchQuery)}
+                                                </p>
+                                                <p className="text-xs text-primary flex items-center gap-1">
+                                                    {highlightMatch(String(Note?.date || ""), searchQuery)}
+                                                    {Note.pinned && <TiPinOutline color="orange" />}
+                                                </p>
+                                            </div>
+                                            <div>
+                                                {isSelected ? (
+                                                    <GoCheckCircleFill className="sm:text-xl text-lg" color="orange" />
+                                                ) : (
+                                                    <RiCheckboxBlankCircleLine className="sm:text-xl text-lg bg-muted rounded-full" color="transparent" />
+                                                )}
+                                            </div>
+                                        </motion.div>
+                                    );
+                                })}
                         </motion.div>
                         {
                             Notes?.map((Note, index) => (
                                 <div key={index} className="w-full mx-auto max-w-5xl fixed bottom-0 left-0 right-0 bg-muted z-40 py-6 sm:px-0 px-6 flex justify-between items-center">
                                     <div className="flex flex-col items-center cursor-pointer">
-                                        <GoUnlock className="text-lg" />
+                                        <GoUnlock className="text-lg" onClick={handleHiddenTodo} />
                                         <span className="text-xs">Hide</span>
                                     </div>
                                     <div

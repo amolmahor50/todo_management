@@ -15,6 +15,7 @@ import EditTodo from "./components/pages/EditTodo";
 import Profile from "./components/pages/Profile";
 import TodoItems from "./components/TodoItems";
 import TasksItems from "./components/TasksItems";
+import LockPannel from "./components/LockPannel";
 
 
 // LoginHandler Component
@@ -98,6 +99,12 @@ const router = createBrowserRouter([
         ]
       },
     ]
+  },
+  {
+    path: 'lock',
+    element: <ProtectedRoute>
+      <LockPannel />
+    </ProtectedRoute>
   },
   {
     path: 'setting',

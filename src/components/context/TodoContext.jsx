@@ -3,6 +3,7 @@ import { serverTimestamp, collection, addDoc, onSnapshot, doc, setDoc, getDocs, 
 import { db } from "../../lib/firebaseConfig";
 import { toast } from "sonner";
 import { saveUserProfile } from "../Authentication/auth";
+import { Navigate, useNavigate } from "react-router-dom";
 
 export const TodoContextData = createContext();
 
@@ -353,6 +354,7 @@ export const addTodoData = async (userId, folderName, todoData) => {
             description: todoData.description || "",
             date: todoData.date || null,
             pinned: todoData.pinned || false,  // Default to false unless explicitly set
+            hiddenTask: todoData.hiddenTask || false,
             createdAt: serverTimestamp(),
         });
 
@@ -412,6 +414,22 @@ export const togglePinStatusForTodo = async (userId, folderName, todoId, current
         await updateDoc(todoRef, { pinned: !currentStatus });
 
         console.log(`Todo ${todoId} pin status updated to ${!currentStatus}`);
+    } catch (error) {
+        console.error("Error toggling pin status:", error.message);
+    }
+};
+
+export const toggleHiddenStatusForTodo = async (userId, folderName, todoId, hiddenStatus) => {
+    try {
+        if (!userId || !folderName || !todoId) {
+            console.error("Missing required fields");
+            return;
+        }
+
+        const todoRef = doc(db, "users", userId, "todos", folderName, "tasks", todoId);
+        await updateDoc(todoRef, { hiddenTask: !hiddenStatus });
+
+        console.log(`Todo ${todoId} pin status updated to ${!hiddenStatus}`);
     } catch (error) {
         console.error("Error toggling pin status:", error.message);
     }
@@ -556,28 +574,40 @@ export const deleteMultipleTodos = async (userId, selectedTodos) => {
 };
 
 export const moveSelectedTasksToFolder = async (userId, selectedTasks, sourceFolder, targetFolder) => {
+
     try {
         if (!userId || !selectedTasks.length || !sourceFolder || !targetFolder) {
             console.error("Missing data for moving tasks:", { userId, selectedTasks, sourceFolder, targetFolder });
             return;
         }
 
+        if (sourceFolder === targetFolder) return
+
+        let moveFolderName = "";
+
+        if (targetFolder === "All") {
+            moveFolderName = "Uncategorised"
+        }
+        else {
+            moveFolderName = targetFolder
+        }
+
         const batch = writeBatch(db);
 
         selectedTasks.forEach((task) => {
             const sourceRef = doc(db, "users", userId, "todos", sourceFolder, "tasks", task.id);
-            const targetRef = doc(db, "users", userId, "todos", targetFolder, "tasks", task.id);
+            const targetRef = doc(db, "users", userId, "todos", moveFolderName, "tasks", task.id);
 
             batch.set(targetRef, {
                 ...task,
-                folder: targetFolder
+                folder: moveFolderName
             });
 
             batch.delete(sourceRef);
         });
 
         await batch.commit();
-        console.log(`Selected tasks moved successfully to "${targetFolder}"`);
+        console.log(`Selected tasks moved successfully to "${moveFolderName}"`);
 
     } catch (error) {
         console.error(`Error moving selected tasks:`, error.message);
@@ -671,3 +701,156 @@ export const updateTaskCompletion = async (userId, taskId, isCompleted) => {
     await updateDoc(taskRef, { isCompleted });
 };
 
+// // Function to create/set a new password only if it's not already set
+// export const lockPasswordCreate = async (userId, password) => {
+//     try {
+//         const docRef = doc(db, "users", userId, "settings", "appLock");
+//         const docSnap = await getDoc(docRef);
+
+//         if (docSnap.exists()) {
+//             toast.error("A lock password is already set. Please Forgot your password instead!");
+//             return;
+//         }
+
+//         await setDoc(docRef, { password });
+//         toast.success("Lock password set successfully!");
+//     } catch (error) {
+//         console.error("Error setting password:", error);
+//         toast.error("Something went wrong!");
+//     }
+// };
+
+// // Function to verify if password is correct
+// export const verifyLockPassword = async (userId, enteredPassword) => {
+//     try {
+//         const docRef = doc(db, "users", userId, "settings", "appLock");
+//         const docSnap = await getDoc(docRef);
+
+//         if (docSnap.exists()) {
+//             const storedPassword = docSnap.data().password;
+
+//             if (storedPassword) {
+//                 return storedPassword === enteredPassword
+//                     ? { success: true, message: "Password verified." }
+//                     : { success: false, message: "Incorrect password." };
+//             } else {
+//                 return { success: false, message: "No password is set. Please create a new password." };
+//             }
+//         } else {
+//             return { success: false, message: "No password is set. Please create a new password." };
+//         }
+//     } catch (error) {
+//         console.error("Error verifying password:", error);
+//         return { success: false, message: "An error occurred while verifying the password." };
+//     }
+// };
+
+// Function to update password (Forgot Password)
+export const updateLockPassword = async (userId, oldForgotPass, newForgotPass) => {
+    try {
+        // Ensure newForgotPass is defined and not empty
+        if (!newForgotPass) {
+            toast.error("New password cannot be empty!");
+            return false;
+        }
+
+        const isCorrect = await verifyLockPassword(userId, oldForgotPass);
+        if (!isCorrect) {
+            toast.error("Old password is incorrect!");
+            return false;
+        }
+
+        // Set new password only if valid
+        const docRef = doc(db, "users", userId, "settings", "appLock");
+        await setDoc(docRef, { password: newForgotPass });
+
+        toast.success("Password updated successfully!");
+        return true;
+    } catch (error) {
+        console.error("Error updating password:", error);
+        return false;
+    }
+};
+
+// Function to create/set a new password only if it's not already set
+export const lockPasswordCreate = async (userId, password, securityQuestion, securityAnswer) => {
+    try {
+        const docRef = doc(db, "users", userId, "settings", "appLock");
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+            toast.error("A lock password is already set. Please use Forgot Password instead!");
+            return;
+        }
+
+        await setDoc(docRef, {
+            password,
+            securityQuestion,
+            securityAnswer: securityAnswer.toLowerCase() // Store in lowercase for case-insensitive comparison
+        });
+
+        toast.success("Lock password set successfully!");
+    } catch (error) {
+        console.error("Error setting password:", error);
+        toast.error("Something went wrong!");
+    }
+};
+
+// Function to verify if the entered password is correct
+export const verifyLockPassword = async (userId, enteredPassword) => {
+    try {
+        const docRef = doc(db, "users", userId, "settings", "appLock");
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+            const storedPassword = docSnap.data().password;
+
+            if (storedPassword) {
+                return storedPassword === enteredPassword
+                    ? { success: true, message: "Password verified." }
+                    : { success: false, message: "Incorrect password." };
+            } else {
+                return { success: false, message: "No password is set. Please create a new password." };
+            }
+        } else {
+            return { success: false, message: "No password is set. Please create a new password." };
+        }
+    } catch (error) {
+        console.error("Error verifying password:", error);
+        return { success: false, message: "An error occurred while verifying the password." };
+    }
+};
+
+// Function to reset password using security question
+export const resetPasswordUsingSecurity = async (userId, enteredAnswer, newPassword) => {
+    try {
+        const docRef = doc(db, "users", userId, "settings", "appLock");
+        const docSnap = await getDoc(docRef);
+
+        if (!docSnap.exists()) {
+            toast.error("No password is set. Please create one.");
+            return false;
+        }
+
+        const data = docSnap.data();
+        if (!data.securityQuestion || !data.securityAnswer) {
+            toast.error("No security question is set. Password recovery is not possible.");
+            return false;
+        }
+
+        // Compare answers (case-insensitive)
+        if (data.securityAnswer.toLowerCase() !== enteredAnswer.toLowerCase()) {
+            toast.error("Incorrect answer to security question.");
+            return false;
+        }
+
+        // Update password if the answer is correct
+        await setDoc(docRef, { password: newPassword }, { merge: true });
+        toast.success("Password has been reset successfully!");
+        return true;
+    } catch (error) {
+        console.error("Error resetting password:", error);
+        toast.error("Something went wrong!");
+        return false;
+    }
+};

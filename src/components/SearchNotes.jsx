@@ -6,18 +6,21 @@ import { TodoContextData } from "./context/TodoContext";
 import { motion } from "framer-motion";
 
 function SearchNotes() {
-    const { searchQuery, setSearchQuery } = useContext(TodoContextData);
+    const {
+        searchQuery,
+        setSearchQuery
+    } = useContext(TodoContextData);
 
     return (
         <div className='sm:max-w-lg w-full my-2 mb-4'>
-            <div className="flex justify-between items-center bg-popover px-4 w-full rounded-full">
+            <div className="flex justify-between items-center bg-popover px-4 py-[1px] w-full rounded-full">
                 <div className="flex items-center">
-                    <IoIosSearch className="text-medium sm:text-lg" />
+                    <IoIosSearch size={22} />
                     <Input
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         placeholder="Search notes"
-                        className="bg-none border-none text-xs p-0 ml-2"
+                        className="bg-none border-none text-sm"
                     />
                 </div>
                 {searchQuery.length > 0 && (
@@ -29,7 +32,7 @@ function SearchNotes() {
                         className="cursor-pointer"
                         onClick={() => setSearchQuery("")}
                     >
-                        <RxCross2 className="text-sm sm:text-medium" />
+                        <RxCross2 size={20} />
                     </motion.div>
                 )}
             </div>
