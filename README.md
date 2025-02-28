@@ -35,4 +35,5 @@ This app allows users to create **To-Do Lists, Set Alarms, Hide Tasks**, and man
 ## 📦Run App
 
 ### **1️⃣ Start a Vite App**  
-"npm run dev" used this command into the project
+```sh
+"npm run dev"  used this command
