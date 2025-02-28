@@ -32,7 +32,7 @@ This app allows users to create **To-Do Lists, Set Alarms, Hide Tasks**, and man
 
 ---
 
-## 📦 Installation & Setup  
+## 📦Run App
 
 ### **1️⃣ Start a Vite App**  
 npm run dev used this command into the project
