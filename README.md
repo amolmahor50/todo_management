@@ -3,6 +3,8 @@
 A feature-rich **Task Management Application** built using **Vite + React.js, Redux Toolkit, Firebase Backend, ShadCN UI, Material UI, and Tailwind CSS**.  
 This app allows users to create **To-Do Lists, Set Alarms, Hide Tasks**, and manage tasks efficiently with real-time sync.  
 
+🔗 **Live App:** [Task Management App](https://todo-management-fd3af.web.app/)  
+
 ---
 
 ## 🚀 Features  
