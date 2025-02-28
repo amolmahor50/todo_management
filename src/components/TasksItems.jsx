@@ -107,15 +107,18 @@ export default function TasksItems() {
                     <>
                         <div className="fixed top-0 left-0 sm:left-1/2 sm:translate-x-[-50%] sm:px-2 px-6 py-6 z-50 w-full max-w-5xl mx-auto">
                             <div className=" flex justify-between items-center">
-                                <RxCross2 className="sm:text-2xl text-xl cursor-pointer" onClick={() => {
-                                    {
-                                        setIsContextMenuOpenForTodos(false)
-                                        setSelectedTasks([])
-                                    }
-                                }
-                                } />
+                                <RxCross2 className="cursor-pointer"
+                                    size={24}
+                                    onClick={() => {
+                                        {
+                                            setIsContextMenuOpenForTodos(false)
+                                            setSelectedTasks([])
+                                        }
+                                    }}
+                                />
                                 <VscChecklist
-                                    className="sm:text-2xl text-xl cursor-pointer"
+                                    className="cursor-pointer"
+                                    size={24}
                                     onClick={() => {
                                         if (selectedTasks.length === tasks.length) {
                                             setSelectedTasks([]);
@@ -128,24 +131,15 @@ export default function TasksItems() {
                         </div>
                         <span className='text-2xl font-normal ml-2'>{selectedTasks.length} Selected Item</span>
 
-                        <motion.div
-                            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 mt-4"
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ duration: 0.5 }}
-                        >
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 mt-4">
                             {
                                 tasks
                                     .filter(task => !task.isCompleted)
                                     .map((task, index) => (
-                                        <motion.div
+                                        <div
                                             key={index}
                                             onClick={() => toggleTaskSelection(task.id)}
-                                            className={`${selectedTasks.includes(task.id) ? "bg-gray-200 text-muted" : "bg-card"} rounded-lg px-4 py-3 flex justify-between items-center gap-4 cursor-pointer shadow-sm hover:shadow-lg`}
-                                            initial={{ opacity: 0, y: 10 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            whileHover={{ boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)" }}
-                                            transition={{ duration: 0.3 }}
+                                            className={`${selectedTasks.includes(task.id) ? "bg-gray-200 text-muted" : "bg-card"} rounded-lg px-4 py-3 flex justify-between items-center gap-4 cursor-pointer shadow-sm hover:shadow-lg select-none`}
                                         >
                                             <div className="flex items-center">
                                                 <span>
@@ -163,10 +157,10 @@ export default function TasksItems() {
                                                 )}
                                             </span>
 
-                                        </motion.div>
+                                        </div>
                                     ))
                             }
-                        </motion.div>
+                        </div>
                         <p
                             className="text-xs sm:text-sm text-muted-foreground flex items-center gap-1 sm:mt-8 mt-4 cursor-pointer"
                             onClick={() => setIsCardVisible(!isCardVisible)}
@@ -176,23 +170,14 @@ export default function TasksItems() {
                         </p>
                         {/* Task Card complted */}
                         {isCardVisible && (
-                            <motion.div
-                                className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 mt-4"
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                transition={{ duration: 0.5 }}
-                            >
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 mt-4">
                                 {tasks
                                     .filter(task => task.isCompleted)
                                     .map((task) => (
-                                        <motion.div
+                                        <div
                                             onClick={() => toggleTaskSelection(task.id)}
                                             key={task.id}
-                                            className={`${selectedTasks.includes(task.id) ? "bg-gray-200" : "bg-card"} rounded-lg px-4 py-3 flex justify-between items-center gap-4 cursor-pointer shadow-sm hover:shadow-lg`}
-                                            initial={{ opacity: 0, y: 10 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            whileHover={{ boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)" }}
-                                            transition={{ duration: 0.3 }}
+                                            className={`${selectedTasks.includes(task.id) ? "bg-gray-200" : "bg-card"} rounded-lg px-4 py-3 flex justify-between items-center gap-4 cursor-pointer shadow-sm hover:shadow-lg select-none`}
                                         >
                                             <p className="text-muted-foreground text-sm line-clamp-3">
                                                 {task.taskMessage}
@@ -205,14 +190,14 @@ export default function TasksItems() {
                                                     <RiCheckboxBlankCircleLine className="sm:text-xl text-lg bg-muted rounded-full" color="transparent" />
                                                 )}
                                             </span>
-                                        </motion.div>
+                                        </div>
                                     ))}
-                            </motion.div>
+                            </div>
                         )}
 
                         <div className="w-full mx-auto max-w-5xl fixed bottom-0 left-0 right-0 bg-muted z-40 p-6 flex justify-center items-center">
                             <div className="flex flex-col items-center cursor-pointer" onClick={() => setDeletePopUpOpen(true)}>
-                                <AiOutlineDelete className="text-lg" />
+                                <AiOutlineDelete size={22} />
                                 <span className="text-xs">Delete</span>
                             </div>
                         </div>
@@ -255,12 +240,7 @@ export default function TasksItems() {
                     (
                         tasks.length > 0 ? (
                             <>
-                                <motion.div
-                                    className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 mt-4"
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    transition={{ duration: 0.5 }}
-                                >
+                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 mt-4">
                                     {
                                         tasks
                                             .filter(task =>
@@ -268,14 +248,10 @@ export default function TasksItems() {
                                                 task.taskMessage.toLowerCase().includes(searchQuery.toLowerCase())
                                             )
                                             .map((task, index) => (
-                                                <motion.div
+                                                <div
                                                     key={index}
                                                     onContextMenu={(e) => handleSelectItems(e, task.id)}
-                                                    className="bg-card rounded-lg px-4 py-3 flex items-center gap-2 cursor-pointer shadow-sm hover:shadow-lg"
-                                                    initial={{ opacity: 0, y: 10 }}
-                                                    animate={{ opacity: 1, y: 0 }}
-                                                    whileHover={{ boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)" }}
-                                                    transition={{ duration: 0.3 }}
+                                                    className="bg-card rounded-lg px-4 py-3 flex items-center gap-2 cursor-pointer shadow-sm hover:shadow-lg select-none"
                                                 >
                                                     <Checkbox
                                                         color="orange"
@@ -289,10 +265,10 @@ export default function TasksItems() {
                                                     >
                                                         {highlightMatch(String(task.taskMessage), searchQuery)}
                                                     </p>
-                                                </motion.div>
+                                                </div>
                                             ))
                                     }
-                                </motion.div>
+                                </div>
                                 <p
                                     className="text-xs sm:text-sm text-muted-foreground flex items-center gap-1 sm:mt-8 mt-4 cursor-pointer"
                                     onClick={() => setIsCardVisible(!isCardVisible)}
@@ -301,12 +277,7 @@ export default function TasksItems() {
                                     Completed {tasks.filter(task => task.isCompleted).length}
                                 </p>
                                 {isCardVisible &&
-                                    <motion.div
-                                        className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 mt-4"
-                                        initial={{ opacity: 0 }}
-                                        animate={{ opacity: 1 }}
-                                        transition={{ duration: 0.5 }}
-                                    >
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 mt-4">
                                         {
                                             tasks
                                                 .filter(task =>
@@ -314,14 +285,10 @@ export default function TasksItems() {
                                                     task.taskMessage.toLowerCase().includes(searchQuery.toLowerCase())
                                                 )
                                                 .map((task, index) => (
-                                                    <motion.div
+                                                    <div
                                                         key={index}
                                                         onContextMenu={(e) => handleSelectItems(e, task.id)}
-                                                        className="bg-gray-200 rounded-lg px-4 py-3 flex items-center gap-2 cursor-pointer shadow-sm hover:shadow-lg"
-                                                        initial={{ opacity: 0, y: 10 }}
-                                                        animate={{ opacity: 1, y: 0 }}
-                                                        whileHover={{ boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)" }}
-                                                        transition={{ duration: 0.3 }}
+                                                        className="bg-gray-200 rounded-lg px-4 py-3 flex items-center gap-2 cursor-pointer shadow-sm hover:shadow-lg select-none"
                                                     >
                                                         <Checkbox
                                                             color="gray"
@@ -334,23 +301,18 @@ export default function TasksItems() {
                                                             className="dark:text-muted text-sm line-clamp-3 flex-1">
                                                             {highlightMatch(String(task.taskMessage), searchQuery)}
                                                         </p>
-                                                    </motion.div>
+                                                    </div>
                                                 ))
                                         }
-                                    </motion.div>
+                                    </div>
                                 }
                             </>
                         )
                             :
                             (
-                                <motion.p
-                                    className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-gray-500 text-center"
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    transition={{ duration: 0.5 }}
-                                >
+                                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-gray-500 text-center">
                                     No Tasks here yet.
-                                </motion.p>
+                                </div>
                             )
                     )
             }
