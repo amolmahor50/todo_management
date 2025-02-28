@@ -14,7 +14,7 @@ function TodoHomePage() {
         <>
             {/* Navbar - Centered on Large Screens */}
             {!isContextMenuOpenForTodos &&
-                < div className='w-full sm:max-w-5xl mx-auto fixed top-0 sm:left-1/2 sm:translate-x-[-50%] left-0 border-b-2 border-gray-300'>
+                < div className='w-full sm:max-w-5xl mx-auto fixed top-0 sm:left-1/2 sm:translate-x-[-50%] left-0 border-b-2 border-gray-300 py-4 px-2'>
                     <Navbar />
                 </ div>
             }
@@ -42,7 +42,7 @@ function TodoHomePage() {
                     {location.pathname === "/todo-management" &&
                         <Link
                             to="/addNotes"
-                            className="rounded-full bg-yellow-500 w-[45px] h-[45px] flex justify-center items-center text-white cursor-pointer shadow-lg"
+                            className="rounded-full bg-yellow-500 w-[50px] h-[50px] flex justify-center items-center text-white cursor-pointer shadow-lg"
                         >
                             <IoAdd size={24} />
                         </Link>

@@ -7,16 +7,21 @@ export default function Navbar() {
     const navigate = useNavigate();
 
     return (
-        <div className="flex justify-between items-center bg-muted px-8 py-4">
-            <div></div>
-            <div>
+        <div className="flex justify-between items-center bg-muted sm:px-0 px-3">
+            <div className="flex gap-3 items-center text-2xl">
+                <img src="/favicon.png"
+                    className="h-8 w-8"
+                />
                 {location.pathname === "/todo-management" ? "Notes" : "Tasks"}
             </div>
-            <div className="flex gap-6 items-center">
+            <div>
+
+            </div>
+            <div className="flex gap-7 items-center">
                 {location.pathname === "/todo-management" && (
-                    <SlFolderAlt size={22} className="cursor-pointer" onClick={() => navigate('/create-folder')} />
+                    <SlFolderAlt size={24} className="cursor-pointer" onClick={() => navigate('/create-folder')} />
                 )}
-                <IoSettingsOutline size={22} className="cursor-pointer" onClick={() => navigate("/setting")} />
+                <IoSettingsOutline size={24} className="cursor-pointer" onClick={() => navigate("/setting")} />
             </div>
         </div>
     );

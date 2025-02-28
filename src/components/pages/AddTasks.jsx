@@ -171,7 +171,7 @@ export default function AddTasks() {
                 >
                     <span
                         onClick={() => setAddTaskPannelOpen(true)}
-                        className="rounded-full bg-yellow-500 w-[40px] h-[40px] flex justify-center items-center text-white cursor-pointer shadow-lg"
+                        className="rounded-full bg-yellow-500 w-[50px] h-[50px] flex justify-center items-center text-white cursor-pointer shadow-lg"
                     >
                         <IoAdd size={24} />
                     </span>

@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -11,10 +11,20 @@ import { Textarea } from "@/components/ui/textarea"
 
 export default function LockPannel() {
     const { user } = useContext(TodoContextData);
-    const [unlocked, setUnlocked] = useState(false);
+
+    // Check if the app is already unlocked
+    const [unlocked, setUnlocked] = useState(() => {
+        return sessionStorage.getItem("appUnlocked") === "true";
+    });
+
+    useEffect(() => {
+        if (unlocked) {
+            sessionStorage.setItem("appUnlocked", "true"); // Store unlock state
+        }
+    }, [unlocked]);
 
     const [pannelOpen, setPannelOpen] = useState({
-        lockPassword: true,
+        lockPassword: !unlocked,
         creatPassword: false,
         forgotPassword: false
     });
@@ -56,7 +66,7 @@ export default function LockPannel() {
     };
 
     const handlePanelSwitch = (panel) => {
-        resetInputData(); // Clear inputs when switching panels
+        resetInputData();
         setPannelOpen({
             lockPassword: panel === "lockPassword",
             creatPassword: panel === "creatPassword",
@@ -79,10 +89,11 @@ export default function LockPannel() {
         handlePanelSwitch("lockPassword");
     };
 
+    // Handle password verification and unlocking
     const handleUnlock = async () => {
         const response = await verifyLockPassword(user.uid, inputData.enteredPass);
-
         if (response.success) {
+            sessionStorage.setItem("appUnlocked", "true");
             setUnlocked(true);
             handlePanelSwitch("");
         } else {

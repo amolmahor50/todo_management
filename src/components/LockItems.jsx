@@ -106,32 +106,23 @@ export default function LockItems() {
         <div className='flex flex-col'>
             <div className="fixed top-0 left-0 sm:left-1/2 sm:translate-x-[-50%] py-4 sm:px-0 px-4 bg-muted z-50 w-full max-w-5xl mx-auto border-b-2">
                 <div className=" flex justify-between items-center">
-                    <IoIosArrowRoundBack size={28} className="cursor-pointer" onClick={() => Navigate(-1)} />
+                    <IoIosArrowRoundBack size={30} className="cursor-pointer" onClick={() => Navigate(-1)} />
                 </div>
             </div>
             {
                 !isContextMenuOpenForTodos ?
                     <>
                         <span className='text-2xl font-normal mt-16 ml-2'>Lock Items</span>
-                        <motion.div
-                            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 mt-4"
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ duration: 0.5 }}
-                        >
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 mt-4">
                             {
                                 Notes
                                     .filter(task => task.hiddenTask)
                                     .map((Note, index) => (
-                                        <motion.div
+                                        <div
                                             key={index}
                                             onClick={() => handleEditTodo(user.uid, Note.folder, Note.id)}
                                             onContextMenu={(e) => handleRightClick(e, Note.id)}
-                                            className="bg-card rounded-lg px-4 py-3 flex flex-col gap-1 cursor-pointer shadow-sm hover:shadow-lg"
-                                            initial={{ opacity: 0, y: 10 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            whileHover={{ boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)" }}
-                                            transition={{ duration: 0.3 }}
+                                            className="bg-card rounded-lg px-4 py-3 flex flex-col gap-1 cursor-pointer shadow-sm hover:shadow-lg select-none"
                                         >
                                             <p className="text-sm font-medium leading-none truncate">
                                                 {Note.title}
@@ -142,20 +133,15 @@ export default function LockItems() {
                                             <p className="text-xs text-primary">
                                                 {Note?.date}
                                             </p>
-                                        </motion.div>
+                                        </div>
                                     ))
                             }
-                        </motion.div>
+                        </div>
 
                         {Notes && Notes.length === 0 ? (
-                            <motion.p
-                                className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-gray-500 text-center"
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                transition={{ duration: 0.5 }}
-                            >
+                            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-gray-500 text-center">
                                 No notes here yet.
-                            </motion.p>
+                            </div>
                         ) : null}
                     </>
                     :
@@ -167,31 +153,22 @@ export default function LockItems() {
                                     setSelectedTodos([]);
                                 }
                                 } />
-                                <VscChecklist className="cursor-pointer" size={22} onClick={toggleSelectAll} />
+                                <VscChecklist className="cursor-pointer" size={24} onClick={toggleSelectAll} />
                             </div>
                         </div>
                         <span className='text-2xl font-normal mt-16 ml-2'>{selectedTodos.length} Selected Item</span>
-                        <motion.div
-                            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 mt-4"
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ duration: 0.5 }}
-                        >
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 mt-4">
                             {
                                 Notes
                                     .filter(task => task.hiddenTask)
                                     .map((Note, index) => {
                                         const isSelected = selectedTodos.includes(Note.id);
                                         return (
-                                            <motion.div
+                                            <div
                                                 key={index}
                                                 onClick={() => toggleTodoSelection(Note.id)}
                                                 onContextMenu={(e) => handleRightClick(e, Note.id)}
-                                                className={`${isSelected ? "bg-gray-200" : "bg-card"} rounded-lg px-4 py-3 flex items-center justify-between cursor-pointer shadow-sm hover:shadow-lg`}
-                                                initial={{ opacity: 0, y: 10 }}
-                                                animate={{ opacity: 1, y: 0 }}
-                                                whileHover={{ scale: 1.02, boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)" }}
-                                                transition={{ duration: 0.3 }}
+                                                className={`${isSelected ? "bg-gray-200" : "bg-card"} rounded-lg px-4 py-3 flex items-center justify-between cursor-pointer shadow-sm hover:shadow-lg select-none`}
                                             >
                                                 <div className="flex flex-col gap-1 truncate">
                                                     <p className="text-sm font-medium leading-none truncate">
@@ -211,24 +188,24 @@ export default function LockItems() {
                                                         <RiCheckboxBlankCircleLine className="sm:text-xl text-lg bg-muted rounded-full" color="transparent" />
                                                     )}
                                                 </div>
-                                            </motion.div>
+                                            </div>
                                         );
                                     })}
-                        </motion.div>
+                        </div>
                     </>
             }
 
             {
                 isContextMenuOpenForTodos && <div className="w-full mx-auto max-w-5xl fixed bottom-0 left-0 right-0 bg-muted z-40 py-5 flex justify-around border-t-2 items-center">
                     <div className="flex flex-col items-center cursor-pointer">
-                        <BsUnlock className="text-lg" onClick={handleHiddenTodo} />
+                        <BsUnlock className="cursor-pointer" size={22} onClick={handleHiddenTodo} />
                         <span className="text-xs">UnHide</span>
                     </div>
                     <div
                         className="flex flex-col items-center cursor-pointer"
                         onClick={() => setDeletedPopUpOpen(true)}
                     >
-                        <AiOutlineDelete className="text-lg" />
+                        <AiOutlineDelete className="cursor-pointer" size={22} />
                         <span className="text-xs">Delete</span>
                     </div>
                     {
