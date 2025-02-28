@@ -141,17 +141,11 @@ export default function CreateFolder() {
         <>
             {isContextMenuOpen && rightClickedFolder.length > 0 ? (
                 <>
-                    <motion.div
-                        className="w-full mx-auto max-w-5xl fixed top-0 left-0 right-0 bg-muted z-40 py-6 px-6 sm:px-0 flex justify-between items-center"
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        transition={{ duration: 0.3, ease: "easeOut" }}
-                    >
-                        <RxCross2 className="sm:text-2xl text-xl cursor-pointer" onClick={closeContextMenu} />
+                    <div className="w-full mx-auto max-w-5xl fixed top-0 left-0 right-0 bg-muted z-40 py-6 px-6 sm:px-0 flex justify-between items-center">
+                        <RxCross2 className="cursor-pointer" size={24} onClick={closeContextMenu} />
                         <span>{`${rightClickedFolder.length} item selected`}</span>
                         <VscChecklist
-                            className="sm:text-2xl text-xl cursor-pointer"
+                            className="cursor-pointer" size={24}
                             onClick={() => {
                                 const selectableFolders = folderName
                                     .map(folder => folder.name)
@@ -164,7 +158,7 @@ export default function CreateFolder() {
                                 }
                             }}
                         />
-                    </motion.div>
+                    </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 my-20">
                         {Array.isArray(folderName) &&
                             folderName
@@ -209,12 +203,7 @@ export default function CreateFolder() {
                                 })}
                     </div>
 
-                    <motion.div
-                        className="w-full mx-auto max-w-5xl fixed bottom-0 left-0 right-0 bg-muted z-40 py-6 px-6 sm:px-0 flex justify-between items-center"
-                        initial={{ y: 50, opacity: 0 }}
-                        animate={{ y: 0, opacity: 1 }}
-                        transition={{ duration: 0.3 }}
-                    >
+                    <div className="w-full mx-auto max-w-5xl fixed bottom-0 left-0 right-0 bg-muted z-40 py-6 px-6 sm:px-0 flex justify-between items-center">
                         <div className="flex flex-col items-center cursor-pointer"
                             onClick={() => {
                                 if (rightClickedFolder.length === 1) {
@@ -225,12 +214,12 @@ export default function CreateFolder() {
                                     }
                                 }
                             }}>
-                            <TiPinOutline className="text-lg" />
+                            <TiPinOutline className="cursor-pointer" size={22} />
                             <span className="text-xs">Pin</span>
                         </div>
                         <div className="flex flex-col items-center cursor-pointer"
                             onClick={() => setDeletedPopUpOpen(true)}>
-                            <AiOutlineDelete className="text-lg" />
+                            <AiOutlineDelete className="cursor-pointer" size={22} />
                             <span className="text-xs">Delete</span>
                         </div>
                         <div className="flex flex-col items-center cursor-pointer"
@@ -239,17 +228,17 @@ export default function CreateFolder() {
                                 setInputFolderName(rightClickedFolder[0]); // Setting the value
                             }}
                         >
-                            <PiPencilSimpleLine className="text-lg" />
+                            <PiPencilSimpleLine className="cursor-pointer" size={22} />
                             <span className="text-xs">Edit</span>
                         </div>
-                    </motion.div>
+                    </div>
                 </>
             ) : (
                 <>
                     <div className="w-full mx-auto max-w-5xl fixed top-0 left-0 right-0 bg-muted z-40 py-6 sm:px-0 px-6 flex justify-between items-center">
-                        <IoIosArrowRoundBack className="sm:text-3xl text-2xl cursor-pointer" onClick={() => Navigate(-1)} />
+                        <IoIosArrowRoundBack className="cursor-pointer" size={30} onClick={() => Navigate(-1)} />
                         <span>Folders</span>
-                        <RiDeleteBinLine className="sm:text-xl text-lg cursor-pointer" />
+                        <RiDeleteBinLine className="cursor-pointer" size={22} />
                     </div>
 
                     {/* Folder List */}

@@ -8,17 +8,16 @@ function Tasks() {
     const { isContextMenuOpenForTodos } = useContext(TodoContextData);
 
     return (
-        <>
+        <div className='flex flex-col'>
             {!isContextMenuOpenForTodos && (
                 <>
                     <SearchNotes />
-                    <span className='text-2xl font-normal'>Tasks</span>
                     <AddTasks />
                 </>
             )
             }
             <Outlet />
-        </>
+        </div>
     )
 }
 

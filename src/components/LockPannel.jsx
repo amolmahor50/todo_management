@@ -1,9 +1,9 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { lockPasswordCreate, resetPasswordUsingSecurity, TodoContextData, updateLockPassword, verifyLockPassword } from './context/TodoContext';
+import { lockPasswordCreate, resetPasswordUsingSecurity, TodoContextData, verifyLockPassword } from './context/TodoContext';
 import { toast } from 'sonner';
 import LockItems from './LockItems';
 import { IoEyeOffOutline, IoEyeOutline } from 'react-icons/io5';
@@ -11,10 +11,20 @@ import { Textarea } from "@/components/ui/textarea"
 
 export default function LockPannel() {
     const { user } = useContext(TodoContextData);
-    const [unlocked, setUnlocked] = useState(false);
+
+    // Check if the app is already unlocked
+    const [unlocked, setUnlocked] = useState(() => {
+        return sessionStorage.getItem("appUnlocked") === "true";
+    });
+
+    useEffect(() => {
+        if (unlocked) {
+            sessionStorage.setItem("appUnlocked", "true"); // Store unlock state
+        }
+    }, [unlocked]);
 
     const [pannelOpen, setPannelOpen] = useState({
-        lockPassword: true,
+        lockPassword: !unlocked,
         creatPassword: false,
         forgotPassword: false
     });
@@ -56,7 +66,7 @@ export default function LockPannel() {
     };
 
     const handlePanelSwitch = (panel) => {
-        resetInputData(); // Clear inputs when switching panels
+        resetInputData();
         setPannelOpen({
             lockPassword: panel === "lockPassword",
             creatPassword: panel === "creatPassword",
@@ -79,10 +89,11 @@ export default function LockPannel() {
         handlePanelSwitch("lockPassword");
     };
 
+    // Handle password verification and unlocking
     const handleUnlock = async () => {
         const response = await verifyLockPassword(user.uid, inputData.enteredPass);
-
         if (response.success) {
+            sessionStorage.setItem("appUnlocked", "true");
             setUnlocked(true);
             handlePanelSwitch("");
         } else {
@@ -138,7 +149,7 @@ export default function LockPannel() {
                     <motion.div className="bg-card p-4 grid gap-4 rounded-lg max-w-[450px] w-[90%] mx-auto absolute bottom-3">
                         <h2 className='text-center font-semibold'>Forgot Password</h2>
                         <div className='grid gap-2'>
-                            <Label>Enter Security Question</Label>
+                            <Label>Enter Security Answer</Label>
                             <Textarea
                                 placeholder="Enter Security Answer."
                                 className="border-2 focus:border-orange-500"

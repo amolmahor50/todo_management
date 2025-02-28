@@ -121,6 +121,7 @@ export default function EditTodo() {
                     title: todoData.title,
                     text: shareText,
                 });
+                setSharePopUpOpen(false);
             } catch (error) {
                 console.error("Error sharing:", error);
             }

@@ -13,7 +13,7 @@ function SearchNotes() {
 
     return (
         <div className='sm:max-w-lg w-full my-2 mb-4'>
-            <div className="flex justify-between items-center bg-popover px-4 py-[1px] w-full rounded-full">
+            <div className="flex justify-between items-center bg-popover px-4 py-[1px] w-full rounded-lg">
                 <div className="flex items-center">
                     <IoIosSearch size={22} />
                     <Input
