@@ -168,7 +168,10 @@ export const fetchFoldersRealtime = (userId, setFolderName) => {
 
                 // Real-time listener for each folder's tasks
                 const unsubscribe = onSnapshot(tasksRef, (tasksSnapshot) => {
-                    let taskCount = tasksSnapshot.size;
+                    // Filter out hidden tasks before counting
+                    const visibleTasks = tasksSnapshot.docs.filter(doc => !doc.data().hiddenTask);
+
+                    let taskCount = visibleTasks.length;
                     taskCounts[folder.name] = taskCount;
 
                     // Calculate total tasks across all folders (except "All" itself)
@@ -202,7 +205,10 @@ export const fetchFoldersRealtime = (userId, setFolderName) => {
             // Cleanup function to remove listeners when component unmounts
             return () => unsubscribeArray.forEach(unsub => unsub());
         } else {
-            setFolderName([{ name: "All", pinned: false, taskCount: 0 }, { name: "Uncategorised", pinned: false, taskCount: 0 }]);
+            setFolderName([
+                { name: "All", pinned: false, taskCount: 0 },
+                { name: "Uncategorised", pinned: false, taskCount: 0 }
+            ]);
         }
     }, (error) => {
         console.error("Error fetching folders:", error.message);

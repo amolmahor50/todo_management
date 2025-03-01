@@ -204,8 +204,11 @@ export default function TodoItems() {
                                     </div>
                                 ))
                         ) : (
-                            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-gray-500 text-center">
-                                No notes here yet.
+                            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-gray-500">
+                                <div className="flex flex-col items-center justify-center">
+                                    <img src="/favicon.png" className="h-14" />
+                                    <span>No notes here yet.</span>
+                                </div>
                             </div>
                         )}
                     </div>
@@ -232,16 +235,16 @@ export default function TodoItems() {
                                             key={index}
                                             onClick={() => toggleTodoSelection(Note.id)}
                                             onContextMenu={(e) => handleRightClick(e, Note.id)}
-                                            className={`${isSelected ? "bg-gray-200" : "bg-card"} rounded-lg px-4 py-3 flex items-center justify-between cursor-pointer shadow-sm hover:shadow-lg select-none`}
+                                            className={`${isSelected ? "bg-gray-200 dark:text-primary-foreground" : "bg-card"} rounded-lg px-4 py-3 flex items-center justify-between cursor-pointer shadow-sm hover:shadow-lg select-none`}
                                         >
                                             <div className="flex flex-col gap-1 truncate">
                                                 <p className="text-sm font-medium leading-none truncate">
                                                     {highlightMatch(String(Note?.title || "No title"), searchQuery)}
                                                 </p>
-                                                <p className="text-sm text-muted-foreground truncate">
+                                                <p className={`text-sm ${isSelected ? "dark:text-muted" : "text-muted-foreground"} truncate`}>
                                                     {highlightMatch(String(Note?.description || "No text"), searchQuery)}
                                                 </p>
-                                                <p className="text-xs text-primary flex items-center gap-1">
+                                                <p className={`text-xs ${isSelected ? "dark:text-primary-foreground" : "text-primary"} flex items-center gap-1`}>
                                                     {highlightMatch(String(Note?.date || ""), searchQuery)}
                                                     {Note.pinned && <TiPinOutline color="orange" />}
                                                 </p>
@@ -293,8 +296,12 @@ export default function TodoItems() {
                                             exit={{ opacity: 0 }}
                                             onClick={() => setDeletedPopUpOpen(false)}
                                         >
-                                            <div
+                                            <motion.div
                                                 className="bg-card p-4 text-center grid gap-4 rounded-lg max-w-[450px] w-[90%] mx-auto absolute bottom-3"
+                                                initial={{ scale: 0.8, opacity: 0, y: 50 }}
+                                                animate={{ scale: 1, opacity: 1, y: 0 }}
+                                                exit={{ scale: 0.8, opacity: 0, y: 50 }}
+                                                transition={{ duration: 0.3, ease: "easeOut" }}
                                                 onClick={(e) => e.stopPropagation()}
                                             >
                                                 <h3>Delete completed tasks</h3>
@@ -311,7 +318,7 @@ export default function TodoItems() {
                                                         Delete
                                                     </Button>
                                                 </div>
-                                            </div>
+                                            </motion.div>
                                         </motion.div>
                                     }
                                 </div>

@@ -4,12 +4,15 @@ import { IoIosSearch } from "react-icons/io"
 import { RxCross2 } from "react-icons/rx";
 import { TodoContextData } from "./context/TodoContext";
 import { motion } from "framer-motion";
+import { useLocation } from "react-router-dom";
 
 function SearchNotes() {
     const {
         searchQuery,
         setSearchQuery
     } = useContext(TodoContextData);
+
+    const location = useLocation();
 
     return (
         <div className='sm:max-w-lg w-full my-2 mb-4'>
@@ -19,7 +22,7 @@ function SearchNotes() {
                     <Input
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="Search notes"
+                        placeholder={`Search ${location.pathname === "/todo-management" ? "Notes" : "Tasks"}`}
                         className="bg-none border-none text-sm"
                     />
                 </div>

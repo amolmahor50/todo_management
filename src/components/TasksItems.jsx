@@ -310,8 +310,11 @@ export default function TasksItems() {
                         )
                             :
                             (
-                                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-gray-500 text-center">
-                                    No Tasks here yet.
+                                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-gray-500">
+                                    <div className="flex flex-col items-center justify-center">
+                                        <img src="/favicon.png" className="h-14" />
+                                        <span> No Tasks here yet.</span>
+                                    </div>
                                 </div>
                             )
                     )

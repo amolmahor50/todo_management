@@ -7,7 +7,7 @@ export default function Navbar() {
     const navigate = useNavigate();
 
     return (
-        <div className="flex justify-between items-center bg-muted sm:px-0 px-3">
+        <div className="flex justify-between items-center sm:px-0 px-3">
             <div className="flex gap-3 items-center text-2xl">
                 <img src="/favicon.png"
                     className="h-8 w-8"

@@ -14,7 +14,14 @@ import { createFolder, deleteFolder, fetchFoldersRealtime, moveSelectedTasksToFo
 import { GoCheckCircleFill } from "react-icons/go";
 
 export default function CreateFolder() {
-    const { user, folderName, setFolderName, selectedFolder, setSelectedFolder } = useContext(TodoContextData);
+    const {
+        user,
+        folderName,
+        setFolderName,
+        selectedFolder,
+        setSelectedFolder,
+        setIsContextMenuOpenForTodos
+    } = useContext(TodoContextData);
     const Navigate = useNavigate();
     const location = useLocation();
     const selectedTasks = location.state?.selectedTasks || [];
@@ -127,12 +134,12 @@ export default function CreateFolder() {
         const sourceFolder = selectedTasks[0]?.folder;
 
         if (!sourceFolder) {
-            console.error("Source folder not found!");
             return;
         }
 
         await moveSelectedTasksToFolder(user.uid, selectedTasks, sourceFolder, targetFolder);
 
+        setIsContextMenuOpenForTodos(false);
         setSelectedFolder(targetFolder);
         Navigate("/todo-management");
     };

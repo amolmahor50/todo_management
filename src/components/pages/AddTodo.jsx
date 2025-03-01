@@ -142,12 +142,12 @@ export default function AddTodo() {
     return (
         <>
             <div className="flex justify-between items-center">
-                <IoIosArrowRoundBack onClick={() => Navigate(-1)} size={30} className="cursor-pointer" />
-                <div className="flex sm:gap-8 gap-6 items-center">
+                <IoIosArrowRoundBack onClick={() => Navigate(-1)} size={36} className="cursor-pointer" />
+                <div className="flex gap-8 items-center">
                     {shouldShowUndoRedo ? (
                         <>
                             <IoReturnUpBackOutline
-                                size={22}
+                                size={24}
                                 className={`cursor-pointer ${historyIndex === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
                                 onMouseDown={(e) => {
                                     e.preventDefault();
@@ -155,14 +155,16 @@ export default function AddTodo() {
                                 }}
                             />
                             <IoReturnUpForwardOutline
-                                size={22}
+                                size={24}
                                 className={`cursor-pointer ${historyIndex === history.length - 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
                                 onMouseDown={(e) => {
                                     e.preventDefault();
                                     handleRedo();
                                 }}
                             />
-                            <IoCheckmarkOutline size={22} className="cursor-pointer"
+                            <IoCheckmarkOutline
+                                size={24}
+                                className="cursor-pointer"
                                 onMouseDown={(e) => {
                                     e.preventDefault();
                                     handleSaveTodo();
@@ -171,7 +173,7 @@ export default function AddTodo() {
                         </>
                     ) : shouldShowShareIcon ? (
                         <div className="flex items-center gap-6">
-                            <PiShareFill size={20} className="cursor-pointer" onClick={() => setSharePopUpOpen(true)} />
+                            <PiShareFill size={22} className="cursor-pointer" onClick={() => setSharePopUpOpen(true)} />
                         </div>
                     ) : null}
                 </div>

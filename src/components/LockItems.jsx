@@ -1,7 +1,8 @@
 import { IoIosArrowRoundBack } from "react-icons/io";
 import { motion } from "framer-motion"
 import { VscChecklist } from "react-icons/vsc";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useState } from "react";
+import { IoSettingsOutline } from "react-icons/io5";
 import { deleteMultipleTodos, TodoContextData, toggleHiddenStatusForTodo } from "./context/TodoContext";
 import { useNavigate } from "react-router-dom";
 import { BsUnlock } from "react-icons/bs";
@@ -26,10 +27,6 @@ export default function LockItems() {
     const handleEditTodo = (userId, folder, taskId) => {
         Navigate(`/editTodo/${userId}/${folder}/${taskId}`);
     };
-
-    useEffect(() => {
-
-    }, [Notes])
 
     const handleRightClick = (e, todoId) => {
         e.preventDefault();
@@ -104,45 +101,49 @@ export default function LockItems() {
 
     return (
         <div className='flex flex-col'>
-            <div className="fixed top-0 left-0 sm:left-1/2 sm:translate-x-[-50%] py-4 sm:px-0 px-4 bg-muted z-50 w-full max-w-5xl mx-auto border-b-2">
+            <div className="fixed top-0 left-0 sm:left-1/2 sm:translate-x-[-50%] py-4 sm:px-0 px-4 bg-muted z-50 w-full max-w-5xl mx-auto border-b border-gray-300">
                 <div className=" flex justify-between items-center">
-                    <IoIosArrowRoundBack size={30} className="cursor-pointer" onClick={() => Navigate(-1)} />
+                    <IoIosArrowRoundBack size={36} className="cursor-pointer" onClick={() => Navigate(-1)} />
+                    <IoSettingsOutline size={24} className="cursor-pointer" />
                 </div>
             </div>
             {
                 !isContextMenuOpenForTodos ?
                     <>
-                        <span className='text-2xl font-normal mt-16 ml-2'>Lock Items</span>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 mt-4">
-                            {
-                                Notes
-                                    .filter(task => task.hiddenTask)
-                                    .map((Note, index) => (
-                                        <div
-                                            key={index}
-                                            onClick={() => handleEditTodo(user.uid, Note.folder, Note.id)}
-                                            onContextMenu={(e) => handleRightClick(e, Note.id)}
-                                            className="bg-card rounded-lg px-4 py-3 flex flex-col gap-1 cursor-pointer shadow-sm hover:shadow-lg select-none"
-                                        >
-                                            <p className="text-sm font-medium leading-none truncate">
-                                                {Note.title}
-                                            </p>
-                                            <p className="text-sm text-muted-foreground truncate">
-                                                {Note?.description || "No text"}
-                                            </p>
-                                            <p className="text-xs text-primary">
-                                                {Note?.date}
-                                            </p>
-                                        </div>
-                                    ))
-                            }
-                        </div>
-
-                        {Notes && Notes.length === 0 ? (
-                            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-gray-500 text-center">
-                                No notes here yet.
-                            </div>
-                        ) : null}
+                        <span className='text-2xl font-normal mt-16 ml-2'>Hidden Notes</span>
+                        {
+                            Notes.length > 0 && Notes.some(task => task.hiddenTask) ? (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 mt-4">
+                                    {
+                                        Notes.filter(task => task.hiddenTask).map((Note, index) => (
+                                            <div
+                                                key={index}
+                                                onClick={() => handleEditTodo(user.uid, Note.folder, Note.id)}
+                                                onContextMenu={(e) => handleRightClick(e, Note.id)}
+                                                className="bg-card rounded-lg px-4 py-3 flex flex-col gap-1 cursor-pointer shadow-sm hover:shadow-lg select-none"
+                                            >
+                                                <p className="text-sm font-medium leading-none truncate">
+                                                    {Note.title}
+                                                </p>
+                                                <p className="text-sm text-muted-foreground truncate">
+                                                    {Note?.description || "No text"}
+                                                </p>
+                                                <p className="text-xs text-primary">
+                                                    {Note?.date}
+                                                </p>
+                                            </div>
+                                        ))
+                                    }
+                                </div>
+                            ) : (
+                                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-gray-500">
+                                    <div className="flex flex-col items-center justify-center">
+                                        <img src="/favicon.png" className="h-14" />
+                                        <span>No notes here yet.</span>
+                                    </div>
+                                </div>
+                            )
+                        }
                     </>
                     :
                     <>
@@ -168,16 +169,16 @@ export default function LockItems() {
                                                 key={index}
                                                 onClick={() => toggleTodoSelection(Note.id)}
                                                 onContextMenu={(e) => handleRightClick(e, Note.id)}
-                                                className={`${isSelected ? "bg-gray-200" : "bg-card"} rounded-lg px-4 py-3 flex items-center justify-between cursor-pointer shadow-sm hover:shadow-lg select-none`}
+                                                className={`${isSelected ? "bg-gray-200 dark:text-primary-foreground" : "bg-card"} rounded-lg px-4 py-3 flex items-center justify-between cursor-pointer shadow-sm hover:shadow-lg select-none`}
                                             >
                                                 <div className="flex flex-col gap-1 truncate">
                                                     <p className="text-sm font-medium leading-none truncate">
                                                         {Note?.title || "No title"}
                                                     </p>
-                                                    <p className="text-sm text-muted-foreground truncate">
+                                                    <p className={`text-sm ${isSelected ? "dark:text-muted" : "text-muted-foreground"} truncate`}>
                                                         {Note?.description || "No text"}
                                                     </p>
-                                                    <p className="text-xs text-primary">
+                                                    <p className={`text-xs ${isSelected ? "dark:text-primary-foreground" : "text-primary"} flex items-center gap-1`}>
                                                         {Note?.date || ""}
                                                     </p>
                                                 </div>

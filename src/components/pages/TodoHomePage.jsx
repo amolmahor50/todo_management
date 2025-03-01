@@ -14,7 +14,7 @@ function TodoHomePage() {
         <>
             {/* Navbar - Centered on Large Screens */}
             {!isContextMenuOpenForTodos &&
-                < div className='w-full sm:max-w-5xl mx-auto fixed top-0 sm:left-1/2 sm:translate-x-[-50%] left-0 border-b-2 border-gray-300 py-4 px-2'>
+                < div className='w-full sm:max-w-5xl mx-auto fixed top-0 sm:left-1/2 sm:translate-x-[-50%] left-0 border-b border-gray-300 py-4 px-2 bg-muted'>
                     <Navbar />
                 </ div>
             }
@@ -25,7 +25,7 @@ function TodoHomePage() {
             </div>
 
             {/* Footer - Centered on Large Screens */}
-            <div className='w-full sm:max-w-5xl mx-auto fixed bottom-0 sm:left-1/2 sm:translate-x-[-50%] left-0 border-t-2 border-gray-300'>
+            <div className='w-full sm:max-w-5xl mx-auto fixed bottom-0 sm:left-1/2 sm:translate-x-[-50%] left-0 border-t border-gray-300'>
                 <Footer />
             </div>
 
