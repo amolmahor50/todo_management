@@ -30,7 +30,10 @@ export default function AddTasks() {
             if (existingTask) {
                 setTaskData({
                     taskMessage: existingTask.taskMessage,
-                    alarmTimer: existingTask.alarmTimer ? new Date(existingTask.alarmTimer) : null,
+                    alarmTimer:
+                        existingTask.alarmTimer && !isNaN(new Date(existingTask.alarmTimer).getTime())
+                            ? new Date(existingTask.alarmTimer)
+                            : null, // Ensure alarmTimer is either a Date or null
                     isCompleted: existingTask.isCompleted
                 });
             }
@@ -38,8 +41,10 @@ export default function AddTasks() {
     }, [taskId, tasks]);
 
     const handleDateChange = (date) => {
-        if (date instanceof Date && !isNaN(date.getTime())) {
+        if (date && date instanceof Date && !isNaN(date.getTime())) {
             setTaskData(prev => ({ ...prev, alarmTimer: date }));
+        } else {
+            setTaskData(prev => ({ ...prev, alarmTimer: null })); // Prevent invalid dates
         }
     };
 
@@ -125,16 +130,18 @@ export default function AddTasks() {
                             </p>
 
                             {/* Hidden DatePicker but opens on button click */}
-                            <DatePicker
-                                selected={taskData.alarmTimer}
-                                onChange={handleDateChange}
-                                showTimeSelect
-                                timeFormat="hh:mm aa"
-                                timeIntervals={15}
-                                dateFormat="MM/dd/yyyy hh:mm aa"
-                                ref={datePickerRef}
-                                className="hidden"
-                            />
+                            {taskData.alarmTimer instanceof Date && !isNaN(taskData.alarmTimer.getTime()) ? (
+                                <DatePicker
+                                    selected={taskData.alarmTimer}
+                                    onChange={handleDateChange}
+                                    showTimeSelect
+                                    timeFormat="hh:mm aa"
+                                    timeIntervals={15}
+                                    dateFormat="MM/dd/yyyy hh:mm aa"
+                                    ref={datePickerRef}
+                                    className="hidden"
+                                />
+                            ) : null}
 
                             {/* Submit Button */}
                             <button

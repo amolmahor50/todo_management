@@ -447,12 +447,33 @@ export const fetchAllFoldersTasks = (userId, setNotes) => {
 
     const foldersRef = collection(db, "users", userId, "todos");
 
-    return onSnapshot(foldersRef, async (foldersSnapshot) => {
+    // Listen for folder changes
+    return onSnapshot(foldersRef, (foldersSnapshot) => {
+        let folderListeners = [];
+
         let allTasks = [];
 
-        const fetchTasks = async (folderId) => {
-            const tasksRef = collection(db, "users", userId, "todos", folderId, "tasks");
-            return onSnapshot(tasksRef, (tasksSnapshot) => {
+        const updateTasks = () => {
+            const sortedTasks = allTasks.sort((a, b) => {
+                if (a.pinned === b.pinned) {
+                    return new Date(b.createdAt?.toDate?.() || b.createdAt) -
+                        new Date(a.createdAt?.toDate?.() || a.createdAt);
+                }
+                return b.pinned - a.pinned;
+            });
+
+            setNotes([...sortedTasks]);
+        };
+
+        // Fetch tasks for each folder
+        foldersSnapshot.docs.forEach((folderDoc) => {
+            const folderId = folderDoc.id;
+            const tasksRef = query(
+                collection(db, "users", userId, "todos", folderId, "tasks"),
+                orderBy("createdAt", "desc")
+            );
+
+            const unsubscribe = onSnapshot(tasksRef, (tasksSnapshot) => {
                 const tasks = tasksSnapshot.docs.map(doc => ({
                     id: doc.id,
                     folder: folderId,
@@ -460,48 +481,35 @@ export const fetchAllFoldersTasks = (userId, setNotes) => {
                 }));
 
                 allTasks = allTasks.filter(task => task.folder !== folderId);
-                allTasks = [...allTasks, ...tasks];
-
-                const sortedTasks = allTasks.sort((a, b) => {
-                    if (a.pinned === b.pinned) {
-                        return new Date(b.createdAt) - new Date(a.createdAt);
-                    }
-                    return b.pinned - a.pinned;
-                });
-
-                setNotes([...sortedTasks]);
+                allTasks.push(...tasks);
+                updateTasks();
             });
-        };
 
-        let folderListeners = foldersSnapshot.docs.map(folderDoc => fetchTasks(folderDoc.id));
+            folderListeners.push(unsubscribe);
+        });
 
-        // Fetch tasks from "Uncategorised" folder explicitly
-        const uncategorisedRef = collection(db, "users", userId, "todos", "Uncategorised", "tasks");
-        folderListeners.push(
-            onSnapshot(uncategorisedRef, (tasksSnapshot) => {
-                const uncategorisedTasks = tasksSnapshot.docs.map(doc => ({
-                    id: doc.id,
-                    folder: "Uncategorised",
-                    ...doc.data(),
-                }));
-
-                allTasks = allTasks.filter(task => task.folder !== "Uncategorised");
-                allTasks = [...allTasks, ...uncategorisedTasks];
-
-                const sortedTasks = allTasks.sort((a, b) => {
-                    if (a.pinned === b.pinned) {
-                        return new Date(b.createdAt) - new Date(a.createdAt);
-                    }
-                    return b.pinned - a.pinned;
-                });
-
-                setNotes([...sortedTasks]);
-            })
+        // Fetch "Uncategorised" folder tasks
+        const uncategorisedRef = query(
+            collection(db, "users", userId, "todos", "Uncategorised", "tasks"),
+            orderBy("createdAt", "desc")
         );
 
-        return () => {
-            folderListeners.forEach(unsub => unsub());
-        };
+        const uncategorisedUnsub = onSnapshot(uncategorisedRef, (tasksSnapshot) => {
+            const uncategorisedTasks = tasksSnapshot.docs.map(doc => ({
+                id: doc.id,
+                folder: "Uncategorised",
+                ...doc.data(),
+            }));
+
+            allTasks = allTasks.filter(task => task.folder !== "Uncategorised");
+            allTasks.push(...uncategorisedTasks);
+            updateTasks();
+        });
+
+        folderListeners.push(uncategorisedUnsub);
+
+        // Cleanup listeners when component unmounts
+        return () => folderListeners.forEach(unsub => unsub());
     });
 };
 
