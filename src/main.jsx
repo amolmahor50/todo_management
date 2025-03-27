@@ -12,7 +12,7 @@ createRoot(document.getElementById('root')).render(
     <TodoContextProvider>
       <ThemeProvider defaultTheme="system" storageKey="todo-theme">
         <FontSizeProvider>
-          <div className="bg-muted min-h-screen px-4 py-3">
+          <div className="bg-muted dark:bg-black min-h-screen px-4 py-3">
             <App />
           </div>
         </FontSizeProvider>
